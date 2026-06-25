@@ -6,7 +6,7 @@
 <meta name="theme-color" content="#D7263D">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<title>ラーメン記録 — 麺帳</title>
+<title>麺帳 — 麺類の記録</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Yuji+Syuku&family=Zen+Kaku+Gothic+New:wght@400;500;700;900&display=swap" rel="stylesheet">
@@ -158,7 +158,7 @@ img.card-photo{object-fit:cover;}
   <div class="head">
     <div>
       <div class="logo"><span class="bowl">🍜</span>麺帳</div>
-      <div class="logo-sub">RAMEN LOG</div>
+      <div class="logo-sub">NOODLE LOG</div>
     </div>
     <button class="gear" id="gear" aria-label="バックアップ">⚙</button>
   </div>
@@ -176,7 +176,7 @@ img.card-photo{object-fit:cover;}
   <div class="empty hidden" id="empty">
     <div class="e">🍜</div>
     <div class="t">まだ記録がないよ</div>
-    <div class="d">食べたラーメンを記録してみよう。<br>写真・評価・お店もまとめて残せます。</div>
+    <div class="d">食べた麺を記録してみよう。<br>ラーメンもうどんもパスタも、まとめて残せます。</div>
   </div>
 </div>
 
@@ -186,7 +186,7 @@ img.card-photo{object-fit:cover;}
 <div class="mask" id="mask"></div>
 <div class="sheet" id="sheet">
   <div class="grip"></div>
-  <div class="sheet-title" id="sheet-title">ラーメンを記録</div>
+  <div class="sheet-title" id="sheet-title">麺を記録</div>
 
   <div class="photo-pick" id="photoPick">
     <span class="pp-ico">📷</span>
@@ -196,7 +196,7 @@ img.card-photo{object-fit:cover;}
 
   <div class="field">
     <label>メニュー名</label>
-    <input type="text" id="f-menu" placeholder="特製醤油らーめん" maxlength="40">
+    <input type="text" id="f-menu" placeholder="肉うどん / 醤油ラーメン / カルボナーラ" maxlength="40">
   </div>
   <div class="field">
     <label>お店</label>
@@ -222,7 +222,7 @@ img.card-photo{object-fit:cover;}
 
   <div class="field">
     <label>ひとことメモ</label>
-    <textarea id="f-memo" placeholder="スープが濃厚で最高だった。チャーシューとろとろ。" maxlength="140"></textarea>
+    <textarea id="f-memo" placeholder="コシが最高だった。出汁がきいてて美味しい。" maxlength="140"></textarea>
   </div>
 
   <button class="save-btn" id="saveBtn">記録する</button>
@@ -251,8 +251,8 @@ img.card-photo{object-fit:cover;}
 // 構造を変える時は migrate() に移行処理を足す。破壊的変更はしない。
 const KEY='ramenLog.v1'
 const DATA_VERSION=1
-const TYPES=['醤油','味噌','塩','豚骨','家系','二郎系','つけ麺','鶏白湯','その他']
-const TYPE_EMOJI={'醤油':'🍜','味噌':'🍲','塩':'🥢','豚骨':'🐷','家系':'🍥','二郎系':'💪','つけ麺':'🥡','鶏白湯':'🐓','その他':'🍜'}
+const TYPES=['ラーメン','つけ麺','うどん','そば','パスタ','焼きそば','担々麺','フォー','その他']
+const TYPE_EMOJI={'ラーメン':'🍜','つけ麺':'🥡','うどん':'🍲','そば':'🥢','パスタ':'🍝','焼きそば':'🍳','担々麺':'🌶️','フォー':'🍤','その他':'🍴'}
 
 let records=load()
 let filter='すべて'
@@ -381,7 +381,7 @@ window._onPhoto=$('photoInput').onchange
 // ===== シート操作 =====
 function openAdd(){
   editId=null;formPhoto=null;formType=null;formStars=0
-  $('sheet-title').textContent='ラーメンを記録'
+  $('sheet-title').textContent='麺を記録'
   $('f-menu').value='';$('f-shop').value='';$('f-price').value='';$('f-memo').value=''
   $('f-date').value=todayStr()
   $('typeGrid').querySelectorAll('.type-opt').forEach(x=>x.classList.remove('on'))
