@@ -10,6 +10,8 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Yuji+Syuku&family=Zen+Kaku+Gothic+New:wght@400;500;700;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
 :root{
@@ -56,6 +58,34 @@ body{
 .stat .v{font-size:18px;font-weight:900;color:var(--noren);font-family:'Zen Kaku Gothic New';line-height:1;}
 .stat .v small{font-size:10px;font-weight:700;}
 .stat .l{font-size:9.5px;color:var(--ink-faint);margin-top:5px;font-weight:500;}
+
+/* view toggle */
+.viewtoggle{display:flex;gap:6px;background:var(--card);border-radius:999px;padding:4px;margin-bottom:14px;
+  box-shadow:0 4px 14px rgba(42,30,22,.06);}
+.vt{flex:1;border:none;background:transparent;border-radius:999px;padding:10px;font-family:inherit;
+  font-size:14px;font-weight:700;color:var(--ink-soft);cursor:pointer;}
+.vt.on{background:var(--noren);color:#fff;}
+
+/* map */
+#map{display:none;height:62vh;border-radius:var(--radius);overflow:hidden;margin-bottom:14px;
+  box-shadow:0 6px 20px rgba(42,30,22,.1);z-index:0;}
+.leaflet-popup-content{font-family:'Zen Kaku Gothic New',sans-serif;margin:10px 12px;}
+.pop-menu{font-size:14px;font-weight:900;color:var(--ink);}
+.pop-shop{font-size:11px;color:var(--ink-soft);margin-top:2px;}
+.pop-stars{font-size:12px;color:var(--broth);margin-top:3px;}
+.pop-edit{display:inline-block;margin-top:7px;font-size:11px;font-weight:700;color:var(--noren);cursor:pointer;}
+.mappin{width:34px;height:34px;border-radius:50% 50% 50% 0;background:#fff;border:2.5px solid var(--noren);
+  transform:rotate(-45deg);display:flex;align-items:center;justify-content:center;box-shadow:0 3px 8px rgba(0,0,0,.3);}
+.mappin span{transform:rotate(45deg);font-size:16px;}
+
+/* location capture */
+.loc-box{display:flex;gap:8px;}
+.loc-btn{flex:1;background:var(--card);border:1.5px solid var(--line);border-radius:12px;
+  padding:11px;font-family:inherit;font-size:13px;font-weight:700;color:var(--ink-soft);cursor:pointer;
+  display:flex;align-items:center;justify-content:center;gap:6px;}
+.loc-btn:active{transform:scale(.97);}
+.loc-status{font-size:12px;color:var(--negi);font-weight:700;margin-top:8px;display:none;}
+.loc-status.on{display:block;}
 
 /* filter */
 .filters{display:flex;gap:7px;overflow-x:auto;padding-bottom:4px;margin-bottom:14px;scrollbar-width:none;}
@@ -170,7 +200,14 @@ img.card-photo{object-fit:cover;}
     <div class="stat"><div class="v" id="st-fav" style="font-size:13px">–</div><div class="l">推し</div></div>
   </div>
 
+  <div class="viewtoggle">
+    <button class="vt on" id="vt-list" data-v="list">📋 リスト</button>
+    <button class="vt" id="vt-map" data-v="map">🗺️ マップ</button>
+  </div>
+
   <div class="filters" id="filters"></div>
+
+  <div id="map"></div>
 
   <div class="list" id="list"></div>
   <div class="empty hidden" id="empty">
@@ -201,6 +238,15 @@ img.card-photo{object-fit:cover;}
   <div class="field">
     <label>お店</label>
     <input type="text" id="f-shop" placeholder="麺屋 ○○" maxlength="40">
+  </div>
+
+  <div class="field">
+    <label>場所（マップに表示）</label>
+    <div class="loc-box">
+      <button type="button" class="loc-btn" id="locGeo">📍 現在地を取得</button>
+      <button type="button" class="loc-btn" id="locSearch">🔍 店名で探す</button>
+    </div>
+    <div class="loc-status" id="locStatus"></div>
   </div>
 
   <div class="field">
@@ -260,6 +306,9 @@ let editId=null
 let formPhoto=null
 let formType=null
 let formStars=0
+let formLat=null,formLng=null,formAddress=''
+let view='list'
+let map=null,markerLayer=null
 
 // 読み込み: 旧形式(配列) / 新形式({version,records}) どちらも受ける = 更新でデータを失わない
 function load(){
@@ -276,6 +325,8 @@ function migrate(arr){
     id:r.id||uid(), menu:r.menu||'', shop:r.shop||'',
     type:r.type||null, stars:r.stars||0,
     price:r.price||'', date:r.date||'', memo:r.memo||'', photo:r.photo||null,
+    lat:(typeof r.lat==='number')?r.lat:null, lng:(typeof r.lng==='number')?r.lng:null,
+    address:r.address||'',
   }))
 }
 function save(){
@@ -311,7 +362,7 @@ function render(){
 
   // list
   const items=records.filter(r=>filter==='すべて'||r.type===filter)
-  if(records.length===0){$('empty').classList.remove('hidden');$('list').innerHTML='';return}
+  if(records.length===0){$('empty').classList.remove('hidden');$('list').innerHTML='';applyView();return}
   $('empty').classList.add('hidden')
   $('list').innerHTML=items.map(r=>`
     <div class="card" data-id="${r.id}">
@@ -330,8 +381,49 @@ function render(){
       </div>
     </div>`).join('')
   $('list').querySelectorAll('.card').forEach(el=>el.onclick=()=>openEdit(el.dataset.id))
+  applyView()
 }
 function esc(s){return (s||'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]))}
+
+// ===== ビュー切替 & マップ =====
+function applyView(){
+  const mapMode=view==='map'
+  $('vt-list').classList.toggle('on',!mapMode)
+  $('vt-map').classList.toggle('on',mapMode)
+  $('map').style.display=mapMode?'block':'none'
+  $('list').style.display=mapMode?'none':'flex'
+  if(mapMode){$('empty').classList.add('hidden');renderMap()}
+}
+$('vt-list').onclick=()=>{view='list';applyView()}
+$('vt-map').onclick=()=>{view='map';applyView()}
+
+function ensureMap(){
+  if(map) return
+  map=L.map('map',{zoomControl:true}).setView([26.2124,127.6809],11) // 那覇あたりを初期表示
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19,attribution:'© OpenStreetMap'}).addTo(map)
+  markerLayer=L.layerGroup().addTo(map)
+  map.on('popupopen',e=>{
+    const el=e.popup.getElement().querySelector('.pop-edit')
+    if(el) el.onclick=()=>{map.closePopup();openEdit(el.dataset.id)}
+  })
+}
+function renderMap(){
+  ensureMap()
+  markerLayer.clearLayers()
+  const items=records.filter(r=>r.lat!=null&&r.lng!=null).filter(r=>filter==='すべて'||r.type===filter)
+  const pts=[]
+  items.forEach(r=>{
+    const icon=L.divIcon({className:'',html:`<div class="mappin"><span>${TYPE_EMOJI[r.type]||'🍜'}</span></div>`,iconSize:[34,34],iconAnchor:[17,34],popupAnchor:[0,-32]})
+    L.marker([r.lat,r.lng],{icon}).addTo(markerLayer).bindPopup(
+      `<div class="pop-menu">${esc(r.menu)}</div>`+
+      (r.shop?`<div class="pop-shop">${esc(r.shop)}</div>`:'')+
+      (r.stars?`<div class="pop-stars">${'★'.repeat(r.stars)}</div>`:'')+
+      `<span class="pop-edit" data-id="${r.id}">編集する ›</span>`)
+    pts.push([r.lat,r.lng])
+  })
+  if(pts.length) map.fitBounds(pts,{padding:[40,40],maxZoom:15})
+  setTimeout(()=>map.invalidateSize(),60)
+}
 
 // ===== 種類グリッド =====
 $('typeGrid').innerHTML=TYPES.map(t=>`<div class="type-opt" data-t="${t}">${TYPE_EMOJI[t]} ${t}</div>`).join('')
@@ -380,12 +472,12 @@ window._onPhoto=$('photoInput').onchange
 
 // ===== シート操作 =====
 function openAdd(){
-  editId=null;formPhoto=null;formType=null;formStars=0
+  editId=null;formPhoto=null;formType=null;formStars=0;formLat=null;formLng=null;formAddress=''
   $('sheet-title').textContent='麺を記録'
   $('f-menu').value='';$('f-shop').value='';$('f-price').value='';$('f-memo').value=''
   $('f-date').value=todayStr()
   $('typeGrid').querySelectorAll('.type-opt').forEach(x=>x.classList.remove('on'))
-  paintStars();resetPhotoUI()
+  paintStars();resetPhotoUI();paintLoc()
   $('delBtn').classList.add('hidden')
   $('saveBtn').textContent='記録する'
   showSheet()
@@ -393,14 +485,51 @@ function openAdd(){
 function openEdit(id){
   const r=records.find(x=>x.id===id);if(!r)return
   editId=id;formPhoto=r.photo||null;formType=r.type||null;formStars=r.stars||0
+  formLat=(typeof r.lat==='number')?r.lat:null;formLng=(typeof r.lng==='number')?r.lng:null;formAddress=r.address||''
   $('sheet-title').textContent='記録を編集'
   $('f-menu').value=r.menu||'';$('f-shop').value=r.shop||''
   $('f-price').value=r.price||'';$('f-memo').value=r.memo||'';$('f-date').value=r.date||todayStr()
   $('typeGrid').querySelectorAll('.type-opt').forEach(x=>x.classList.toggle('on',x.dataset.t===formType))
-  paintStars();paintPhoto()
+  paintStars();paintPhoto();paintLoc()
   $('delBtn').classList.remove('hidden')
   $('saveBtn').textContent='更新する'
   showSheet()
+}
+
+// ===== 場所の取得 =====
+function paintLoc(){
+  const el=$('locStatus')
+  if(formLat!=null&&formLng!=null){
+    el.classList.add('on')
+    el.textContent='📍 場所を設定済み'+(formAddress?'：'+formAddress:`（${formLat.toFixed(4)}, ${formLng.toFixed(4)}）`)
+  }else{el.classList.remove('on');el.textContent=''}
+}
+$('locGeo').onclick=()=>{
+  if(!navigator.geolocation){toast('現在地が取得できない端末です');return}
+  toast('現在地を取得中…')
+  navigator.geolocation.getCurrentPosition(async pos=>{
+    formLat=pos.coords.latitude;formLng=pos.coords.longitude
+    paintLoc();reverseGeocode()
+  },()=>toast('現在地を取得できなかった'),{timeout:8000,enableHighAccuracy:true})
+}
+$('locSearch').onclick=async()=>{
+  const q=$('f-shop').value.trim()
+  if(!q){toast('先に「お店」を入力してね');return}
+  toast('店名で検索中…')
+  try{
+    const r=await fetch(`https://nominatim.openstreetmap.org/search?format=json&limit=1&q=${encodeURIComponent(q)}`,{headers:{'Accept-Language':'ja'}})
+    const j=await r.json()
+    if(!j.length){toast('場所が見つからなかった');return}
+    formLat=+j[0].lat;formLng=+j[0].lon;formAddress=(j[0].display_name||'').split(',').slice(0,3).join('、')
+    paintLoc();toast('場所を設定したよ 📍')
+  }catch(e){toast('検索に失敗した…')}
+}
+async function reverseGeocode(){
+  try{
+    const r=await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${formLat}&lon=${formLng}`,{headers:{'Accept-Language':'ja'}})
+    const j=await r.json()
+    if(j&&j.display_name){formAddress=j.display_name.split(',').slice(0,3).join('、');paintLoc()}
+  }catch(e){/* best-effort */}
 }
 function showSheet(){$('mask').classList.add('on');$('sheet').classList.add('on')}
 function hideSheet(){$('mask').classList.remove('on');$('sheet').classList.remove('on')}
@@ -416,6 +545,7 @@ $('saveBtn').onclick=()=>{
     type:formType, stars:formStars,
     price:$('f-price').value.trim(), date:$('f-date').value.trim()||todayStr(),
     memo:$('f-memo').value.trim(), photo:formPhoto,
+    lat:formLat, lng:formLng, address:formAddress,
   }
   if(editId){records=records.map(r=>r.id===editId?rec:r);toast('更新したよ ✓')}
   else{records.unshift(rec);toast('記録したよ 🍜')}
