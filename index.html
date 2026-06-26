@@ -30,8 +30,10 @@ body{font-family:'Zen Kaku Gothic New',sans-serif;color:var(--ink);background:va
 .logo-word{font-size:23px;font-weight:900;color:var(--ink);letter-spacing:2px;}
 .logo-sub{font-size:9.5px;color:var(--ink-3);letter-spacing:3.5px;margin-top:4px;font-weight:700;}
 .gear{width:38px;height:38px;border-radius:50%;border:1px solid var(--line);background:transparent;
-  color:var(--ink-2);font-size:17px;cursor:pointer;}
+  color:var(--ink-2);font-size:16px;cursor:pointer;text-decoration:none;
+  display:inline-flex;align-items:center;justify-content:center;font-weight:700;}
 .gear:active{background:var(--line-2);}
+.head-actions{display:flex;gap:8px;}
 
 /* stats — カードでなく罫線で区切るフラットな数値帯 */
 .stats{display:flex;border-top:1px solid var(--line);border-bottom:1px solid var(--line);margin-bottom:22px;}
@@ -192,14 +194,17 @@ body{font-family:'Zen Kaku Gothic New',sans-serif;color:var(--ink);background:va
     <div>
       <div class="logo-word">麺帳</div>
     </div>
-    <button class="gear" id="gear" aria-label="データの管理">⚙</button>
+    <div class="head-actions">
+      <a class="gear" href="wiki.html" aria-label="用語辞典">辞</a>
+      <button class="gear" id="gear" aria-label="データの管理">⚙</button>
+    </div>
   </div>
 
   <div class="stats">
     <div class="stat"><div class="v" id="st-count">0</div><div class="l">杯</div></div>
     <div class="stat"><div class="v" id="st-avg">–</div><div class="l">平均評価</div></div>
     <div class="stat"><div class="v" id="st-total">¥0</div><div class="l">合計</div></div>
-    <div class="stat"><div class="v" id="st-fav" style="font-size:14px">–</div><div class="l">モストフェイバリットヌードル</div></div>
+    <div class="stat"><div class="v" id="st-fav" style="font-size:14px">–</div><div class="l">MFN</div></div>
   </div>
 
   <div class="toolbar">

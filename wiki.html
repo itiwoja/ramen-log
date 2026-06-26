@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no">
+<meta name="theme-color" content="#FFFFFF">
+<title>麺帳 用語辞典</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Zen+Kaku+Gothic+New:wght@400;500;700;900&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+:root{--paper:#FFFFFF;--ink:#0B0B0B;--ink-2:#555;--ink-3:#9A9A9A;--line:#E6E6E6;--line-2:#F2F2F2;}
+html,body{height:100%;}
+body{font-family:'Zen Kaku Gothic New',sans-serif;color:var(--ink);background:var(--paper);
+  min-height:100dvh;-webkit-font-smoothing:antialiased;}
+.wrap{max-width:560px;margin:0 auto;padding:calc(env(safe-area-inset-top) + 14px) 20px 80px;}
+
+.back{display:inline-flex;align-items:center;gap:6px;font-size:13px;font-weight:700;color:var(--ink-2);
+  text-decoration:none;margin-bottom:20px;}
+.back:active{color:var(--ink);}
+
+.title{font-size:26px;font-weight:900;letter-spacing:2px;}
+.sub{font-size:12px;color:var(--ink-3);margin-top:6px;line-height:1.7;letter-spacing:.5px;}
+
+.search{width:100%;background:transparent;border:1px solid var(--line);border-radius:8px;
+  padding:11px 14px;font-family:inherit;font-size:14px;color:var(--ink);margin:22px 0 6px;}
+.search::placeholder{color:var(--ink-3);}
+.search:focus{outline:none;border-color:var(--ink);}
+.count{font-size:11px;color:var(--ink-3);margin-bottom:8px;letter-spacing:.5px;}
+
+.term{padding:20px 0;border-bottom:1px solid var(--line);}
+.term:last-child{border-bottom:none;}
+.term-h{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;}
+.term-w{font-size:19px;font-weight:900;letter-spacing:.5px;}
+.term-r{font-size:12px;color:var(--ink-3);font-weight:600;}
+.term-tag{font-size:9px;font-weight:800;letter-spacing:1px;color:var(--paper);background:var(--ink);
+  padding:2px 7px;border-radius:4px;}
+.term-d{font-size:14px;line-height:1.9;color:var(--ink-2);margin-top:9px;}
+.term-d b{color:var(--ink);font-weight:700;}
+.none{padding:60px 0;text-align:center;color:var(--ink-3);font-size:14px;}
+
+.foot{margin-top:34px;text-align:center;font-size:11px;color:var(--ink-3);line-height:1.8;}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <a class="back" href="index.html">← 麺帳にもどる</a>
+  <div class="title">麺帳 用語辞典</div>
+  <div class="sub">麺好きが使う、ちょっとおもしろい言葉あつめ。<br>あなたの麺ライフがもっと捗る（はず）。</div>
+
+  <input class="search" id="q" type="text" placeholder="用語を検索" autocomplete="off">
+  <div class="count" id="count"></div>
+
+  <div id="list"></div>
+
+  <div class="foot">麺帳 ／ MEN GLOSSARY<br>※ ここに載っている言葉はだいたい非公式です</div>
+</div>
+
+<script>
+const TERMS=[
+  {w:'MFN', r:'エム・エフ・エヌ', tag:'公式用語', d:'<b>Most Favorite Noodle</b> の略。いちばん多く食べているジャンル＝あなたの“推し麺”。麺帳のトップに表示される名誉ある称号。'},
+  {w:'麺活', r:'めんかつ', d:'麺を食べ歩き、記録していく活動全般。婚活より優先される場合がある。'},
+  {w:'沼麺', r:'ぬまめん', d:'中毒性が高すぎて何度も通ってしまう、抜け出せない一杯。気づけば財布が軽い。'},
+  {w:'スープ完飲', r:'スープかんいん', d:'スープを最後の一滴まで飲み干すこと。店への最大級の賛辞であり、塩分への宣戦布告。'},
+  {w:'替玉案件', r:'かえだまあんけん', d:'替玉せずにはいられない、麺が進みすぎる店。理性が試される。'},
+  {w:'麺ロス', r:'めんロス', d:'食べ終わってしまった後の寂しさ。次の一杯までの禁断症状。'},
+  {w:'★5殿堂', r:'ごせいでんどう', d:'評価★5をつけた、人生に刻まれる神麺。記憶より記録に残す。'},
+  {w:'コシ勢／スープ勢', r:'コシぜい・スープぜい', d:'麺のコシを重視する派か、スープを重視する派か。永遠に決着しない宗派対立。'},
+  {w:'隠れ名店', r:'かくれめいてん', d:'まだ世に知られていない、自分だけの当たり店。教えたいけど教えたくない。'},
+  {w:'麺デビュー', r:'めんデビュー', d:'初めてのジャンルや新店を、麺帳に初記録すること。人生初フォーは一生もの。'},
+  {w:'ノーデイ・ノー・ヌードル', r:'No Day No Noodle', d:'麺を食べない日はない、という生き方であり覚悟。'},
+  {w:'無限すすり', r:'むげんすすり', d:'いつまでもすすっていられる、終わってほしくない多幸感のこと。'},
+  {w:'二郎不可避', r:'じろうふかひ', d:'理由もなく無性に二郎系が食べたくなる現象。だいたい深夜に発症する。'},
+  {w:'リピ確', r:'リピかく', d:'「リピート確定」の略。また絶対に来ると確信した瞬間に成立する。'},
+  {w:'麺帳', r:'めんちょう', tag:'このアプリ', d:'<b>このアプリ</b>。あなたの麺の記録帳であり、麺人生の年表。'},
+]
+
+const $=id=>document.getElementById(id)
+function esc(s){return (s||'').replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]))}
+
+function render(q){
+  q=(q||'').toLowerCase()
+  const items=TERMS.filter(t=>!q||`${t.w} ${t.r} ${t.d}`.toLowerCase().includes(q))
+  $('count').textContent=`${items.length} 語`
+  if(!items.length){$('list').innerHTML='<div class="none">見つからなかった…</div>';return}
+  $('list').innerHTML=items.map(t=>`
+    <div class="term">
+      <div class="term-h">
+        <span class="term-w">${esc(t.w)}</span>
+        <span class="term-r">${esc(t.r)}</span>
+        ${t.tag?`<span class="term-tag">${esc(t.tag)}</span>`:''}
+      </div>
+      <div class="term-d">${t.d}</div>
+    </div>`).join('')
+}
+$('q').oninput=e=>render(e.target.value.trim())
+render('')
+</script>
+</body>
+</html>
