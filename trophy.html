@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no">
+<meta name="theme-color" content="#FFFFFF">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icon.svg">
+<link rel="icon" href="icon.svg">
+<title>麺帳 トロフィー</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Zen+Kaku+Gothic+New:wght@400;500;700;900&display=swap" rel="stylesheet">
+<script src="achievements.js"></script>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+:root{--paper:#FFFFFF;--ink:#0B0B0B;--ink-2:#555;--ink-3:#9A9A9A;--line:#E6E6E6;--line-2:#F2F2F2;}
+html,body{height:100%;}
+body{font-family:'Zen Kaku Gothic New',sans-serif;color:var(--ink);background:var(--paper);
+  min-height:100dvh;-webkit-font-smoothing:antialiased;}
+.wrap{max-width:560px;margin:0 auto;padding:calc(env(safe-area-inset-top) + 14px) 20px 80px;}
+.back{display:inline-flex;align-items:center;gap:6px;font-size:13px;font-weight:700;color:var(--ink-2);
+  text-decoration:none;margin-bottom:18px;}
+.title{font-size:26px;font-weight:900;letter-spacing:2px;}
+.score{font-size:13px;color:var(--ink-3);margin-top:6px;font-weight:700;letter-spacing:.5px;}
+.scorebar{height:8px;border-radius:4px;background:var(--line-2);overflow:hidden;margin:12px 0 4px;}
+.scorebar i{display:block;height:100%;background:var(--ink);}
+.group-h{font-size:12px;font-weight:800;letter-spacing:1.5px;color:var(--paper);background:var(--ink);
+  display:inline-block;padding:4px 11px;border-radius:5px;margin:28px 0 8px;}
+.tr{display:flex;align-items:center;gap:13px;padding:13px 0;border-bottom:1px solid var(--line);}
+.tr:last-child{border-bottom:none;}
+.tr-badge{width:40px;height:40px;flex-shrink:0;border-radius:10px;display:flex;align-items:center;
+  justify-content:center;font-size:18px;font-weight:900;border:1.5px solid var(--line);color:var(--ink-3);}
+.tr.on .tr-badge{background:var(--ink);color:var(--paper);border-color:var(--ink);}
+.tr-body{flex:1;min-width:0;}
+.tr-title{font-size:15px;font-weight:800;color:var(--ink-3);}
+.tr.on .tr-title{color:var(--ink);}
+.tr-desc{font-size:11px;color:var(--ink-3);margin-top:1px;}
+.tr-prog{height:5px;border-radius:3px;background:var(--line-2);overflow:hidden;margin-top:7px;}
+.tr-prog i{display:block;height:100%;background:var(--ink-3);}
+.tr.on .tr-prog i{background:var(--ink);}
+.tr-have{flex-shrink:0;font-size:11px;font-weight:700;color:var(--ink-3);min-width:44px;text-align:right;}
+.tr.on .tr-have{color:var(--ink);}
+.foot{margin-top:30px;text-align:center;font-size:11px;color:var(--ink-3);line-height:1.7;}
+.empty-all{padding:90px 24px;text-align:center;color:var(--ink-3);}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <a class="back" href="index.html">← 麺帳にもどる</a>
+  <div class="title">トロフィー</div>
+  <div class="score" id="score"></div>
+  <div class="scorebar"><i id="scorebar"></i></div>
+  <div id="list"></div>
+  <div class="foot">麺を食べて記録すると自動で獲得 ✦</div>
+</div>
+<script>
+const KEY='ramenLog.v1'
+function loadRecords(){try{const r=JSON.parse(localStorage.getItem(KEY));if(!r)return[];return Array.isArray(r)?r:(r.records||[])}catch(e){return[]}}
+const $=id=>document.getElementById(id)
+function esc(s){return (s||'').replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]))}
+
+const records=loadRecords()
+const ach=(window.computeAchievements?computeAchievements(records):[])
+const earnedN=ach.filter(a=>a.earned).length
+$('score').textContent=`${earnedN} / ${ach.length} 獲得`
+$('scorebar').style.width=ach.length?Math.round(earnedN/ach.length*100)+'%':'0%'
+
+// グループ順: 総合 → ジャンル。獲得済みを上に。
+const groups=['総合','ジャンル']
+let html=''
+groups.forEach(g=>{
+  const items=ach.filter(a=>a.group===g).sort((a,b)=>(b.earned-a.earned))
+  if(!items.length)return
+  html+=`<div class="group-h">${esc(g)}</div>`
+  html+=items.map(a=>`
+    <div class="tr ${a.earned?'on':''}">
+      <div class="tr-badge">${a.earned?'✓':'🔒'}</div>
+      <div class="tr-body">
+        <div class="tr-title">${esc(a.title)}</div>
+        <div class="tr-desc">${esc(a.desc)}</div>
+        <div class="tr-prog"><i style="width:${Math.round(a.pct*100)}%"></i></div>
+      </div>
+      <div class="tr-have">${a.earned?'獲得':a.have+'/'+a.target}</div>
+    </div>`).join('')
+})
+$('list').innerHTML = records.length? html : '<div class="empty-all">まだ記録がないよ。<br>麺を記録するとトロフィーが解放されます。</div>'
+if('serviceWorker' in navigator){addEventListener('load',()=>navigator.serviceWorker.register('sw.js').catch(()=>{}))}
+</script>
+</body>
+</html>

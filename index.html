@@ -11,6 +11,7 @@
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="apple-touch-icon" href="icon.svg">
 <link rel="icon" href="icon.svg">
+<script src="achievements.js"></script>
 <title>麺帳 — 麺類の記録</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -228,6 +229,7 @@ body{font-family:'Zen Kaku Gothic New',sans-serif;color:var(--ink);background:va
       <div class="logo-word">麺帳</div>
     </div>
     <div class="head-actions">
+      <a class="gear" href="trophy.html" aria-label="トロフィー">賞</a>
       <a class="gear" href="stats.html" aria-label="分析">統</a>
       <a class="gear" href="wiki.html" aria-label="用語辞典">辞</a>
       <button class="gear" id="gear" aria-label="データの管理">⚙</button>
@@ -800,7 +802,19 @@ $('saveBtn').onclick=async()=>{
   if(editId){records=records.map(r=>r.id===editId?rec:r);toast('更新したよ')}
   else{records.unshift(rec);toast('記録したよ')}
   try{save()}catch(e){toast('保存に失敗…')}
-  hideSheet();render()
+  hideSheet();render();celebrateTrophies()
+}
+
+// トロフィー: 新規獲得をトーストで祝う
+const TROPHY_KEY='mencho.trophies'
+function celebrateTrophies(){
+  if(!window.computeAchievements) return
+  const all=computeAchievements(records)
+  const earned=all.filter(a=>a.earned).map(a=>a.id)
+  let seen=[]; try{seen=JSON.parse(localStorage.getItem(TROPHY_KEY)||'[]')}catch(e){}
+  const fresh=earned.filter(id=>!seen.includes(id))
+  localStorage.setItem(TROPHY_KEY,JSON.stringify(earned))
+  fresh.forEach((id,i)=>{const a=all.find(x=>x.id===id); if(a) setTimeout(()=>toast('🏆 '+a.title+' 獲得！'),900+i*1700)})
 }
 $('delBtn').onclick=()=>{
   if(!editId)return
@@ -881,6 +895,10 @@ if(_p.get('tag')){activeTag=_p.get('tag')}
 render()
 // 旧形式の写真を新スキームへ一度だけ移行
 migratePhotosV2()
+// 初回は既獲得トロフィーを既読にしておく（一斉トースト防止）
+if(localStorage.getItem(TROPHY_KEY)===null && window.computeAchievements){
+  localStorage.setItem(TROPHY_KEY, JSON.stringify(computeAchievements(records).filter(a=>a.earned).map(a=>a.id)))
+}
 
 // オフライン対応 (Service Worker)
 if('serviceWorker' in navigator){addEventListener('load',()=>navigator.serviceWorker.register('sw.js').catch(()=>{}))}
