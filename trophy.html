@@ -44,7 +44,7 @@ body{font-family:'Zen Kaku Gothic New',sans-serif;color:var(--ink);background:va
 .tr-have{flex-shrink:0;font-size:11px;font-weight:700;color:var(--ink-3);min-width:44px;text-align:right;}
 .tr.on .tr-have{color:var(--ink);}
 .foot{margin-top:30px;text-align:center;font-size:11px;color:var(--ink-3);line-height:1.7;}
-.empty-all{padding:90px 24px;text-align:center;color:var(--ink-3);}
+.empty-note{font-size:12px;color:var(--ink-3);text-align:center;padding:8px 0 4px;letter-spacing:.5px;}
 </style>
 </head>
 <body>
@@ -86,7 +86,8 @@ groups.forEach(g=>{
       <div class="tr-have">${a.earned?'獲得':a.have+'/'+a.target}</div>
     </div>`).join('')
 })
-$('list').innerHTML = records.length? html : '<div class="empty-all">まだ記録がないよ。<br>麺を記録するとトロフィーが解放されます。</div>'
+// 記録が無くても全トロフィーを一覧表示（目標を眺められる）
+$('list').innerHTML = (records.length?'':'<div class="empty-note">まだ記録なし。これが集めるトロフィー一覧 ✦</div>') + html
 if('serviceWorker' in navigator){addEventListener('load',()=>navigator.serviceWorker.register('sw.js').catch(()=>{}))}
 </script>
 </body>
