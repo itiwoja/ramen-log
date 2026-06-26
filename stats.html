@@ -49,6 +49,22 @@ body{font-family:'Zen Kaku Gothic New',sans-serif;color:var(--ink);background:va
 .sk-v{font-size:22px;font-weight:900;}
 .sk-v small{font-size:11px;color:var(--ink-3);}
 .sk-l{font-size:9px;color:var(--ink-3);margin-top:6px;font-weight:700;letter-spacing:1px;}
+/* 麺活グラフ（草） */
+.grass-scroll{overflow-x:auto;scrollbar-width:none;padding-bottom:4px;}
+.grass-scroll::-webkit-scrollbar{display:none;}
+.grass-inner{width:max-content;}
+.grass-cols{display:flex;gap:3px;}
+.g-col{display:flex;flex-direction:column;gap:3px;}
+.g-cell{width:12px;height:12px;border-radius:2px;background:var(--line-2);}
+.g-mrow{display:flex;gap:3px;margin-bottom:4px;}
+.g-mlabel{width:12px;font-size:9px;color:var(--ink-3);white-space:nowrap;font-weight:700;}
+.g0{background:var(--line-2);}
+.g1{background:rgba(11,11,11,.25);}
+.g2{background:rgba(11,11,11,.45);}
+.g3{background:rgba(11,11,11,.68);}
+.g4{background:rgba(11,11,11,.9);}
+.lg.g0{background:var(--line-2);}.lg.g1{background:rgba(11,11,11,.25);}.lg.g2{background:rgba(11,11,11,.45);}.lg.g3{background:rgba(11,11,11,.68);}.lg.g4{background:rgba(11,11,11,.9);}
+
 /* カレンダー */
 .cal-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;}
 .cal-title{font-size:15px;font-weight:800;}
@@ -163,7 +179,10 @@ function render(){
       <div class="sk"><div class="sk-v">${st.days}<small>日</small></div><div class="sk-l">麺活した日数</div></div>
     </div></div>`
 
-  // 麺活カレンダー
+  // 麺活グラフ（GitHubの草風・過去1年）
+  html+=`<div class="sec"><div class="sec-h">麺活グラフ（過去1年）</div><div id="grass"></div></div>`
+
+  // 麺活カレンダー（月別）
   html+=`<div class="sec"><div class="sec-h">麺活カレンダー</div><div id="cal"></div></div>`
 
   // 月別
@@ -238,7 +257,39 @@ function render(){
 
   $('content').innerHTML=html
   fillPhotos($('content'))
+  renderGrass()
   renderCalendar()
+}
+
+// 麺活グラフ（過去1年・週=列 / 曜日=行）
+function renderGrass(){
+  const el=$('grass'); if(!el) return
+  const counts={}; records.forEach(r=>{if(r.date)counts[r.date]=(counts[r.date]||0)+1})
+  const toISO=dt=>`${dt.getFullYear()}-${String(dt.getMonth()+1).padStart(2,'0')}-${String(dt.getDate()).padStart(2,'0')}`
+  const end=new Date(); end.setHours(0,0,0,0)
+  const start=new Date(end); start.setDate(start.getDate()-364); start.setDate(start.getDate()-start.getDay()) // 日曜起点
+  const WK=['日','月','火','水','木','金','土']
+  // 月ラベル（週ごとに月が変わったら表示）
+  const weeks=[]; let week=[]; const cur=new Date(start)
+  while(cur<=end){
+    const iso=toISO(cur), c=counts[iso]||0
+    const lvl=c===0?0:c===1?1:c===2?2:c===3?3:4
+    week.push(`<div class="g-cell g${lvl}" title="${iso} ・ ${c}杯"></div>`)
+    if(cur.getDay()===6){weeks.push({cells:week,m:cur.getMonth()}); week=[]}
+    cur.setDate(cur.getDate()+1)
+  }
+  if(week.length)weeks.push({cells:week,m:end.getMonth()})
+  let lastM=-1
+  const labels=weeks.map(w=>{const show=w.m!==lastM; lastM=w.m; return `<div class="g-mlabel">${show?(w.m+1)+'月':''}</div>`}).join('')
+  const cols=weeks.map(w=>`<div class="g-col">${w.cells.join('')}</div>`).join('')
+  el.innerHTML=`
+    <div class="grass-scroll">
+      <div class="grass-inner">
+        <div class="g-mrow">${labels}</div>
+        <div class="grass-cols">${cols}</div>
+      </div>
+    </div>
+    <div class="cal-legend">少 <i class="lg g0"></i><i class="lg g1"></i><i class="lg g2"></i><i class="lg g3"></i><i class="lg g4"></i> 多</div>`
 }
 
 // 麺活カレンダー (月送り)
