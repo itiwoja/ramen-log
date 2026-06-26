@@ -152,6 +152,22 @@ body{font-family:'Zen Kaku Gothic New',sans-serif;color:var(--ink);background:va
 .row2{display:flex;gap:16px;}
 .row2 .field{flex:1;}
 
+/* 店名検索 (OSM) */
+.shop-row{display:flex;gap:10px;align-items:flex-end;}
+.shop-row input{flex:1;width:auto;}
+.shop-find{flex-shrink:0;border:1px solid var(--line);background:transparent;border-radius:8px;
+  padding:8px 14px;font-family:inherit;font-size:13px;font-weight:700;color:var(--ink-2);cursor:pointer;}
+.shop-find:active{background:var(--line-2);}
+.shop-results{display:none;flex-direction:column;border:1px solid var(--line);border-radius:8px;overflow:hidden;margin-top:10px;}
+.shop-results.on{display:flex;}
+.sr-item{padding:10px 12px;border-bottom:1px solid var(--line-2);cursor:pointer;}
+.sr-item:last-child{border-bottom:none;}
+.sr-item:active{background:var(--line-2);}
+.sr-name{font-size:14px;font-weight:700;color:var(--ink);}
+.sr-addr{font-size:11px;color:var(--ink-3);margin-top:2px;}
+.shop-loc{display:none;font-size:11px;color:var(--ink-2);font-weight:700;margin-top:8px;}
+.shop-loc.on{display:block;}
+
 .word-hint{font-size:10px;color:var(--ink-3);margin-top:10px;font-weight:700;letter-spacing:.5px;}
 .word-hint a{color:var(--ink-2);}
 .word-chips{display:flex;gap:6px;overflow-x:auto;margin-top:8px;padding-bottom:2px;scrollbar-width:none;}
@@ -287,7 +303,12 @@ body{font-family:'Zen Kaku Gothic New',sans-serif;color:var(--ink);background:va
   </div>
   <div class="field">
     <label>お店</label>
-    <input type="text" id="f-shop" placeholder="麺屋 ○○" maxlength="40">
+    <div class="shop-row">
+      <input type="text" id="f-shop" placeholder="麺屋 ○○" maxlength="40" autocomplete="off">
+      <button type="button" class="shop-find" id="shopFind">検索</button>
+    </div>
+    <div class="shop-results" id="shopResults"></div>
+    <div class="shop-loc" id="shopLoc"></div>
   </div>
 
   <div class="field">
@@ -756,6 +777,36 @@ function paintPhoto(){
 }
 function resetPhotoUI(){formPhotos=[];exifApplied=false;paintPhoto()}
 
+// ===== 店名検索 (OpenStreetMap / 無料) =====
+function paintShopLoc(){
+  const el=$('shopLoc')
+  if(formLat!=null&&formLng!=null){el.classList.add('on');el.textContent='📍 位置設定済み'+(formAddress?'：'+formAddress:'')}
+  else{el.classList.remove('on');el.textContent=''}
+}
+$('shopFind').onclick=async()=>{
+  const q=$('f-shop').value.trim()
+  if(!q){toast('店名を入れてから検索');return}
+  toast('店を検索中…')
+  try{
+    const r=await fetch(`https://nominatim.openstreetmap.org/search?format=json&namedetails=1&addressdetails=1&limit=6&countrycodes=jp&accept-language=ja&q=${encodeURIComponent(q)}`)
+    const j=await r.json()
+    const box=$('shopResults')
+    if(!j.length){box.classList.remove('on');toast('見つからなかった（手入力でもOK）');return}
+    box.innerHTML=j.map((p,i)=>{
+      const nm=(p.namedetails&&p.namedetails.name)||p.display_name.split(',')[0]
+      const addr=p.display_name.split(',').slice(1,4).join('、').trim()
+      return `<div class="sr-item" data-i="${i}"><div class="sr-name">${esc(nm)}</div><div class="sr-addr">${esc(addr)}</div></div>`
+    }).join('')
+    box.classList.add('on')
+    box.querySelectorAll('.sr-item').forEach(el=>el.onclick=()=>{
+      const p=j[+el.dataset.i]
+      $('f-shop').value=(p.namedetails&&p.namedetails.name)||p.display_name.split(',')[0]
+      formLat=+p.lat;formLng=+p.lon;formAddress=p.display_name.split(',').slice(0,3).join('、')
+      box.classList.remove('on');paintShopLoc()
+    })
+  }catch(e){toast('検索に失敗（手入力でもOK）')}
+}
+
 // ===== シート操作 =====
 function openAdd(){
   editId=null;formType=null;formStars=0;formLat=null;formLng=null;formAddress='';formTags=new Set()
@@ -764,6 +815,7 @@ function openAdd(){
   $('f-date').value=todayStr()
   $('typeGrid').querySelectorAll('.type-opt').forEach(x=>x.classList.remove('on'))
   paintStars();resetPhotoUI();renderTagChips()
+  $('shopResults').classList.remove('on');paintShopLoc()
   $('delBtn').classList.add('hidden')
   $('saveBtn').textContent='記録する'
   showSheet()
@@ -781,6 +833,7 @@ async function openEdit(id){
   $('f-price').value=r.price||'';$('f-memo').value=r.memo||'';$('f-date').value=r.date||todayStr()
   $('typeGrid').querySelectorAll('.type-opt').forEach(x=>x.classList.toggle('on',x.dataset.t===formType))
   paintStars();paintPhoto();renderTagChips()
+  $('shopResults').classList.remove('on');paintShopLoc()
   $('delBtn').classList.remove('hidden')
   $('saveBtn').textContent='更新する'
   showSheet()
