@@ -129,6 +129,14 @@ body{font-family:'Zen Kaku Gothic New',sans-serif;color:var(--ink);background:va
 .row2{display:flex;gap:16px;}
 .row2 .field{flex:1;}
 
+.word-hint{font-size:10px;color:var(--ink-3);margin-top:10px;font-weight:700;letter-spacing:.5px;}
+.word-hint a{color:var(--ink-2);}
+.word-chips{display:flex;gap:6px;overflow-x:auto;margin-top:8px;padding-bottom:2px;scrollbar-width:none;}
+.word-chips::-webkit-scrollbar{display:none;}
+.wchip{flex-shrink:0;border:1px solid var(--line);border-radius:999px;padding:5px 11px;
+  font-size:12px;font-weight:700;color:var(--ink-2);background:transparent;cursor:pointer;white-space:nowrap;font-family:inherit;}
+.wchip:active{background:var(--line-2);}
+
 .type-grid{display:flex;flex-wrap:wrap;gap:8px;}
 .type-opt{padding:9px 15px;border-radius:999px;font-size:13px;font-weight:700;cursor:pointer;
   background:transparent;color:var(--ink-2);border:1px solid var(--line);}
@@ -269,6 +277,8 @@ body{font-family:'Zen Kaku Gothic New',sans-serif;color:var(--ink);background:va
   <div class="field">
     <label>ひとことメモ</label>
     <textarea id="f-memo" placeholder="コシが最高だった。出汁がきいてて美味しい。" maxlength="140"></textarea>
+    <div class="word-hint">タップで用語をいれる ・ <a href="wiki.html" target="_blank" rel="noopener">辞典</a></div>
+    <div class="word-chips" id="wordChips"></div>
   </div>
 
   <button class="save-btn" id="saveBtn">記録する</button>
@@ -545,6 +555,17 @@ function makeSwipeable(sheet,onClose){
     if(cur>100)onClose()
   })
 }
+
+// ===== メモ用 スラング用語チップ (タップで挿入) =====
+const INSERT_WORDS=['沼麺','スープ完飲','替玉案件','麺ロス','★5殿堂','リピ確','隠れ名店','無限すすり','二郎不可避','麺デビュー','コシ勢','スープ勢']
+$('wordChips').innerHTML=INSERT_WORDS.map(w=>`<button type="button" class="wchip" data-w="${w}">${w}</button>`).join('')
+$('wordChips').querySelectorAll('.wchip').forEach(b=>b.onclick=()=>{
+  const ta=$('f-memo'),cur=ta.value,ins=b.dataset.w
+  const sep=(cur && !/\s$/.test(cur))?' ':''
+  let next=cur+sep+ins
+  if(next.length>140)next=next.slice(0,140)
+  ta.value=next;ta.focus()
+})
 
 // ===== 種類グリッド =====
 $('typeGrid').innerHTML=TYPES.map(t=>`<div class="type-opt" data-t="${t}">${t}</div>`).join('')
