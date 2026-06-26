@@ -324,7 +324,9 @@ function migrate(arr){
   return arr.filter(Boolean).map(r=>({
     id:r.id||uid(), menu:r.menu||'', shop:r.shop||'',
     type:r.type||null, stars:r.stars||0,
-    price:r.price||'', date:r.date||'', memo:r.memo||'', photo:r.photo||null,
+    price:r.price||'', date:r.date||'', memo:r.memo||'',
+    // photo は旧形式(dataURL)を一旦保持。移行後は IndexedDB に移し hasPhoto のみ残す
+    photo:r.photo||null, hasPhoto:!!r.hasPhoto,
     lat:(typeof r.lat==='number')?r.lat:null, lng:(typeof r.lng==='number')?r.lng:null,
     address:r.address||'',
   }))
@@ -335,6 +337,64 @@ function save(){
 function uid(){return Date.now().toString(36)+Math.random().toString(36).slice(2,7)}
 
 const $=id=>document.getElementById(id)
+
+// ===== 写真ストレージ (IndexedDB / Blob) =====
+// 写真は容量の大きい IndexedDB に保存。localStorage には文字情報のみ。
+const IDB_NAME='menchoDB', IDB_STORE='photos'
+let _db=null
+function idbOpen(){
+  return new Promise((res,rej)=>{
+    if(_db)return res(_db)
+    const rq=indexedDB.open(IDB_NAME,1)
+    rq.onupgradeneeded=()=>{const db=rq.result;if(!db.objectStoreNames.contains(IDB_STORE))db.createObjectStore(IDB_STORE)}
+    rq.onsuccess=()=>{_db=rq.result;res(_db)}
+    rq.onerror=()=>rej(rq.error)
+  })
+}
+async function idbPut(id,blob){const db=await idbOpen();return new Promise((res,rej)=>{const tx=db.transaction(IDB_STORE,'readwrite');tx.objectStore(IDB_STORE).put(blob,id);tx.oncomplete=()=>res();tx.onerror=()=>rej(tx.error)})}
+async function idbGet(id){const db=await idbOpen();return new Promise((res,rej)=>{const tx=db.transaction(IDB_STORE,'readonly');const rq=tx.objectStore(IDB_STORE).get(id);rq.onsuccess=()=>res(rq.result||null);rq.onerror=()=>rej(rq.error)})}
+async function idbDel(id){const db=await idbOpen();return new Promise((res,rej)=>{const tx=db.transaction(IDB_STORE,'readwrite');tx.objectStore(IDB_STORE).delete(id);tx.oncomplete=()=>res();tx.onerror=()=>rej(tx.error)})}
+
+function dataURLtoBlob(d){
+  const [head,b64]=d.split(',');const mime=(head.match(/:(.*?);/)||[])[1]||'image/jpeg'
+  const bin=atob(b64),arr=new Uint8Array(bin.length)
+  for(let i=0;i<bin.length;i++)arr[i]=bin.charCodeAt(i)
+  return new Blob([arr],{type:mime})
+}
+function blobToDataURL(blob){return new Promise(res=>{const r=new FileReader();r.onload=()=>res(r.result);r.readAsDataURL(blob)})}
+
+// 表示用 objectURL のキャッシュ
+const photoURLs={}
+async function getPhotoURL(id){
+  if(photoURLs[id])return photoURLs[id]
+  try{const b=await idbGet(id);if(!b)return null;const u=URL.createObjectURL(b);photoURLs[id]=u;return u}catch(e){return null}
+}
+function dropPhotoCache(id){if(photoURLs[id]){URL.revokeObjectURL(photoURLs[id]);delete photoURLs[id]}}
+// data-pid を持つ要素に写真を非同期で流し込む
+function fillPhotos(root){
+  root.querySelectorAll('[data-pid]').forEach(async el=>{
+    const u=await getPhotoURL(el.dataset.pid)
+    if(u){el.style.backgroundImage=`url("${u}")`;el.style.backgroundSize='cover';el.style.backgroundPosition='center';el.classList.remove('ph');el.innerHTML=''}
+  })
+}
+// 起動時: 旧 localStorage 内の写真(dataURL)を IndexedDB へ一度だけ移行
+async function migratePhotos(){
+  let changed=false
+  for(const r of records){
+    if(typeof r.photo==='string' && r.photo.startsWith('data:')){
+      try{ await idbPut(r.id,dataURLtoBlob(r.photo)); r.hasPhoto=true; r.photo=null; changed=true }
+      catch(e){/* 失敗時は dataURL を残す(消さない) */}
+    }
+  }
+  if(changed){save();render()}
+}
+
+// 写真セルの HTML (旧dataURL / IDB / なし を吸収)
+function photoCell(r,cls){
+  if(r.photo) return `<img class="${cls}" src="${r.photo}">`
+  if(r.hasPhoto) return `<div class="${cls} ph" data-pid="${r.id}"><span>${esc(r.type)||'麺'}</span></div>`
+  return `<div class="${cls} ph"><span>${esc(r.type)||'麺'}</span></div>`
+}
 
 // ===== 描画 =====
 function starHTML(n){let s='';for(let i=1;i<=5;i++)s+=`<span class="${i<=n?'':'off'}">★</span>`;return `<span class="stars">${s}</span>`}
@@ -366,7 +426,7 @@ function render(){
     <div class="card-wrap">
       <div class="card-del">削除</div>
       <div class="card" data-id="${r.id}">
-        ${r.photo?`<img class="card-photo" src="${r.photo}">`:`<div class="card-photo ph"><span>${esc(r.type)||'麺'}</span></div>`}
+        ${photoCell(r,'card-photo')}
         <div class="card-body">
           <div class="card-shop">${esc(r.shop)||'お店未設定'}</div>
           <div class="card-menu">${esc(r.menu)||'（無題）'}</div>
@@ -382,6 +442,7 @@ function render(){
       </div>
     </div>`).join('')
   $('list').querySelectorAll('.card').forEach(attachCard)
+  fillPhotos($('list'))
 }
 function esc(s){return (s||'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]))}
 
@@ -402,8 +463,13 @@ $('sort').onchange=e=>{sortBy=e.target.value;render()}
 // ===== 詳細表示 (メモも表示) =====
 function openDetail(id){
   const r=records.find(x=>x.id===id);if(!r)return
+  const dphoto = r.photo
+    ? `<div class="d-photo"><img src="${r.photo}"></div>`
+    : (r.hasPhoto
+        ? `<div class="d-photo" data-pid="${r.id}"><span class="ph">${esc(r.type)||'麺'}</span></div>`
+        : `<div class="d-photo"><span class="ph">${esc(r.type)||'麺'}</span></div>`)
   $('dContent').innerHTML=`
-    <div class="d-photo">${r.photo?`<img src="${r.photo}">`:`<span class="ph">${esc(r.type)||'麺'}</span>`}</div>
+    ${dphoto}
     <div class="d-shop">${esc(r.shop)||'お店未設定'}</div>
     <div class="d-menu">${esc(r.menu)||'（無題）'}</div>
     <div class="d-meta">${r.type?`<span class="tchip">${esc(r.type)}</span>`:''}${r.stars?starHTML(r.stars):''}</div>
@@ -416,6 +482,7 @@ function openDetail(id){
   $('dEdit').onclick=()=>{hideDetail();openEdit(id)}
   $('dDel').onclick=()=>{hideDetail();deleteRecord(id)}
   $('dMask').classList.add('on');$('dSheet').classList.add('on')
+  fillPhotos($('dContent'))
 }
 function hideDetail(){$('dMask').classList.remove('on');$('dSheet').classList.remove('on')}
 $('dMask').onclick=hideDetail
@@ -451,6 +518,7 @@ function attachCard(el){
 }
 function deleteRecord(id){
   records=records.filter(r=>r.id!==id);save();render();toast('削除したよ')
+  dropPhotoCache(id);idbDel(id).catch(()=>{})
 }
 
 // シート: 下スワイプで閉じる
@@ -533,10 +601,14 @@ function openAdd(){
   $('saveBtn').textContent='記録する'
   showSheet()
 }
-function openEdit(id){
+async function openEdit(id){
   const r=records.find(x=>x.id===id);if(!r)return
-  editId=id;formPhoto=r.photo||null;formType=r.type||null;formStars=r.stars||0
+  editId=id;formType=r.type||null;formStars=r.stars||0
   formLat=(typeof r.lat==='number')?r.lat:null;formLng=(typeof r.lng==='number')?r.lng:null;formAddress=r.address||''
+  // 既存写真をフォーム用 dataURL として読み込む (旧 dataURL or IDB)
+  if(r.photo) formPhoto=r.photo
+  else if(r.hasPhoto){const b=await idbGet(id);formPhoto=b?await blobToDataURL(b):null}
+  else formPhoto=null
   $('sheet-title').textContent='記録を編集'
   $('f-menu').value=r.menu||'';$('f-shop').value=r.shop||''
   $('f-price').value=r.price||'';$('f-memo').value=r.memo||'';$('f-date').value=r.date||todayStr()
@@ -552,20 +624,27 @@ function hideSheet(){$('mask').classList.remove('on');$('sheet').classList.remov
 $('mask').onclick=hideSheet
 $('fab').onclick=openAdd
 
-$('saveBtn').onclick=()=>{
+$('saveBtn').onclick=async()=>{
   const menu=$('f-menu').value.trim()
   if(!menu){toast('メニュー名を入れてね');$('f-menu').focus();return}
+  const id=editId||uid()
+  // 写真は IndexedDB へ (localStorage には入れない)
+  try{
+    if(formPhoto) await idbPut(id,dataURLtoBlob(formPhoto))
+    else await idbDel(id)
+  }catch(e){toast('写真の保存に失敗…')}
+  dropPhotoCache(id)
   const rec={
-    id:editId||uid(),
+    id,
     menu, shop:$('f-shop').value.trim(),
     type:formType, stars:formStars,
     price:$('f-price').value.trim(), date:$('f-date').value.trim()||todayStr(),
-    memo:$('f-memo').value.trim(), photo:formPhoto,
+    memo:$('f-memo').value.trim(), photo:null, hasPhoto:!!formPhoto,
     lat:formLat, lng:formLng, address:formAddress,
   }
   if(editId){records=records.map(r=>r.id===editId?rec:r);toast('更新したよ')}
   else{records.unshift(rec);toast('記録したよ')}
-  try{save()}catch(e){toast('保存容量オーバー（写真が大きすぎ）')}
+  try{save()}catch(e){toast('保存に失敗…')}
   hideSheet();render()
 }
 $('delBtn').onclick=()=>{
@@ -579,12 +658,20 @@ function todayStr(){const d=new Date();return `${d.getFullYear()}-${String(d.get
 function hideBackup(){$('bkMask').classList.remove('on');$('bkSheet').classList.remove('on')}
 $('gear').onclick=()=>{$('bkMask').classList.add('on');$('bkSheet').classList.add('on')}
 $('bkMask').onclick=hideBackup
-$('exportBtn').onclick=()=>{
-  const data={app:'mencho',version:DATA_VERSION,exportedAt:new Date().toISOString(),records}
-  const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'})
+$('exportBtn').onclick=async()=>{
+  toast('バックアップ作成中…')
+  // 写真(IDB)も dataURL として同梱し、単体で復元できるバックアップにする
+  const out=[]
+  for(const r of records){
+    const rec={...r}
+    if(rec.hasPhoto && !rec.photo){const b=await idbGet(r.id);if(b)rec.photo=await blobToDataURL(b)}
+    out.push(rec)
+  }
+  const data={app:'mencho',version:DATA_VERSION,exportedAt:new Date().toISOString(),records:out}
+  const blob=new Blob([JSON.stringify(data)],{type:'application/json'})
   const url=URL.createObjectURL(blob)
   const a=document.createElement('a')
-  a.href=url;a.download=`ramen-log-backup-${todayStr()}.json`
+  a.href=url;a.download=`mencho-backup-${todayStr()}.json`
   document.body.appendChild(a);a.click();a.remove();URL.revokeObjectURL(url)
   toast('バックアップを書き出したよ')
 }
@@ -592,11 +679,17 @@ $('importBtn').onclick=()=>$('importInput').click()
 $('importInput').onchange=e=>{
   const file=e.target.files[0];if(!file)return
   const reader=new FileReader()
-  reader.onload=ev=>{
+  reader.onload=async ev=>{
     try{
       const parsed=JSON.parse(ev.target.result)
       const incoming=migrate(Array.isArray(parsed)?parsed:(parsed.records||[]))
       if(!incoming.length){toast('読み込めるデータが無かったよ');return}
+      // バックアップ内の写真(dataURL)を IndexedDB へ移し、localStorage は軽く保つ
+      for(const r of incoming){
+        if(typeof r.photo==='string' && r.photo.startsWith('data:')){
+          try{await idbPut(r.id,dataURLtoBlob(r.photo));r.hasPhoto=true;r.photo=null;dropPhotoCache(r.id)}catch(e){}
+        }
+      }
       const byId={}
       records.forEach(r=>byId[r.id]=r)
       incoming.forEach(r=>byId[r.id]=r)
@@ -619,6 +712,8 @@ makeSwipeable($('bkSheet'),hideBackup)
 makeSwipeable($('dSheet'),hideDetail)
 
 render()
+// 旧 localStorage 内の写真を IndexedDB へ一度だけ移行
+migratePhotos()
 </script>
 </body>
 </html>
