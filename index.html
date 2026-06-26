@@ -380,6 +380,7 @@ let query='',sortBy='new'
 let editId=null
 let formPhotos=[]
 let exifApplied=false
+let dateTouched=false
 let formType=null
 let formStars=0
 let formLat=null,formLng=null,formAddress=''
@@ -744,6 +745,9 @@ $('typeGrid').querySelectorAll('.type-opt').forEach(el=>el.onclick=()=>{
   renderTagChips() // ジャンルに応じて専用タグを出す
 })
 
+// 日付を手動で変えたら EXIF で上書きしない
+$('f-date').oninput=()=>{dateTouched=true}
+
 // ===== 星 =====
 $('starPick').querySelectorAll('span').forEach(el=>el.onclick=()=>{formStars=+el.dataset.v;paintStars()})
 function paintStars(){$('starPick').querySelectorAll('span').forEach(s=>s.classList.toggle('on',+s.dataset.v<=formStars))}
@@ -754,8 +758,7 @@ async function handlePhotoFile(file){
   // 撮影日(EXIF)は縮小前の元ファイルから読む。最初の1枚で日付欄が空なら自動入力。
   if(!exifApplied){
     const d=await getExifDate(file)
-    if(d && !$('f-date').value){ $('f-date').value=d }
-    exifApplied=true
+    if(d){ if(!dateTouched) $('f-date').value=d; exifApplied=true }
   }
   const dataURL=await resizeToDataURL(file)
   if(dataURL){ formPhotos.push(dataURL); paintPhoto() }
@@ -809,7 +812,7 @@ $('shopFind').onclick=async()=>{
 
 // ===== シート操作 =====
 function openAdd(){
-  editId=null;formType=null;formStars=0;formLat=null;formLng=null;formAddress='';formTags=new Set()
+  editId=null;formType=null;formStars=0;formLat=null;formLng=null;formAddress='';formTags=new Set();dateTouched=false
   $('sheet-title').textContent='麺を記録'
   $('f-menu').value='';$('f-shop').value='';$('f-price').value='';$('f-memo').value=''
   $('f-date').value=todayStr()
@@ -825,7 +828,7 @@ async function openEdit(id){
   editId=id;formType=r.type||null;formStars=r.stars||0;formTags=new Set(r.tags||[])
   formLat=(typeof r.lat==='number')?r.lat:null;formLng=(typeof r.lng==='number')?r.lng:null;formAddress=r.address||''
   // 既存写真をフォーム用 dataURL として読み込む
-  formPhotos=[]; exifApplied=true   // 編集時は日付を自動上書きしない
+  formPhotos=[]; exifApplied=true; dateTouched=true   // 編集時は日付を自動上書きしない
   for(let i=0;i<(r.photos||0);i++){const b=await idbGet(pkey(id,i)); if(b)formPhotos.push(await blobToDataURL(b))}
   if(!formPhotos.length && r.photo) formPhotos.push(r.photo)  // 移行前フォールバック
   $('sheet-title').textContent='記録を編集'
