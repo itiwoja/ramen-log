@@ -10,8 +10,6 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Zen+Kaku+Gothic+New:wght@400;500;700;900&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
 :root{
@@ -43,25 +41,6 @@ body{font-family:'Zen Kaku Gothic New',sans-serif;color:var(--ink);background:va
 .stat .v{font-size:21px;font-weight:900;color:var(--ink);line-height:1;letter-spacing:.5px;}
 .stat .v small{font-size:11px;font-weight:700;color:var(--ink-3);margin-left:1px;}
 .stat .l{font-size:9px;color:var(--ink-3);margin-top:7px;font-weight:700;letter-spacing:1px;}
-
-/* view toggle — 下線タブ */
-.viewtoggle{display:flex;gap:24px;border-bottom:1px solid var(--line);margin-bottom:16px;}
-.vt{border:none;background:none;font-family:inherit;font-size:14px;font-weight:700;
-  color:var(--ink-3);cursor:pointer;padding:0 0 12px;position:relative;letter-spacing:.5px;}
-.vt.on{color:var(--ink);}
-.vt.on::after{content:'';position:absolute;left:0;right:0;bottom:-1px;height:2px;background:var(--ink);}
-
-/* map */
-#map{display:none;height:62vh;border:1px solid var(--line);border-radius:4px;overflow:hidden;margin-bottom:16px;z-index:0;}
-.leaflet-popup-content{font-family:'Zen Kaku Gothic New',sans-serif;margin:10px 12px;}
-.pop-menu{font-size:14px;font-weight:900;color:var(--ink);}
-.pop-shop{font-size:11px;color:var(--ink-2);margin-top:2px;}
-.pop-stars{font-size:12px;color:var(--accent);margin-top:3px;letter-spacing:1px;}
-.pop-edit{display:inline-block;margin-top:7px;font-size:11px;font-weight:700;color:var(--ink);
-  text-decoration:underline;text-underline-offset:3px;cursor:pointer;}
-.mappin{width:22px;height:22px;border-radius:50% 50% 50% 0;background:var(--ink);
-  transform:rotate(-45deg);border:2px solid #fff;box-shadow:0 2px 5px rgba(0,0,0,.35);position:relative;}
-.mappin::after{content:'';position:absolute;top:6px;left:6px;width:6px;height:6px;border-radius:50%;background:#fff;}
 
 /* filter — 角丸アウトライン / アクティブは墨ベタ(モノクロ) */
 .filters{display:flex;gap:8px;overflow-x:auto;padding-bottom:2px;margin-bottom:18px;scrollbar-width:none;}
@@ -144,13 +123,6 @@ body{font-family:'Zen Kaku Gothic New',sans-serif;color:var(--ink);background:va
 .row2{display:flex;gap:16px;}
 .row2 .field{flex:1;}
 
-.loc-box{display:flex;gap:8px;}
-.loc-btn{flex:1;background:transparent;border:1px solid var(--line);border-radius:8px;
-  padding:11px;font-family:inherit;font-size:13px;font-weight:700;color:var(--ink-2);cursor:pointer;}
-.loc-btn:active{background:var(--line-2);}
-.loc-status{font-size:12px;color:var(--ink-2);font-weight:700;margin-top:10px;display:none;}
-.loc-status.on{display:block;}
-
 .type-grid{display:flex;flex-wrap:wrap;gap:8px;}
 .type-opt{padding:9px 15px;border-radius:999px;font-size:13px;font-weight:700;cursor:pointer;
   background:transparent;color:var(--ink-2);border:1px solid var(--line);}
@@ -201,14 +173,7 @@ body{font-family:'Zen Kaku Gothic New',sans-serif;color:var(--ink);background:va
     <div class="stat"><div class="v" id="st-fav" style="font-size:14px">–</div><div class="l">推し</div></div>
   </div>
 
-  <div class="viewtoggle">
-    <button class="vt on" id="vt-list" data-v="list">リスト</button>
-    <button class="vt" id="vt-map" data-v="map">マップ</button>
-  </div>
-
   <div class="filters" id="filters"></div>
-
-  <div id="map"></div>
 
   <div class="list" id="list"></div>
   <div class="empty hidden" id="empty">
@@ -237,15 +202,6 @@ body{font-family:'Zen Kaku Gothic New',sans-serif;color:var(--ink);background:va
   <div class="field">
     <label>お店</label>
     <input type="text" id="f-shop" placeholder="麺屋 ○○" maxlength="40">
-  </div>
-
-  <div class="field">
-    <label>場所（マップに表示）</label>
-    <div class="loc-box">
-      <button type="button" class="loc-btn" id="locGeo">現在地を取得</button>
-      <button type="button" class="loc-btn" id="locSearch">店名で探す</button>
-    </div>
-    <div class="loc-status" id="locStatus"></div>
   </div>
 
   <div class="field">
@@ -305,8 +261,6 @@ let formPhoto=null
 let formType=null
 let formStars=0
 let formLat=null,formLng=null,formAddress=''
-let view='list'
-let map=null,markerLayer=null
 
 // 読み込み: 旧形式(配列) / 新形式({version,records}) どちらも受ける = 更新でデータを失わない
 function load(){
@@ -355,7 +309,7 @@ function render(){
   $('filters').querySelectorAll('.fchip').forEach(el=>el.onclick=()=>{filter=el.dataset.f;render()})
 
   const items=records.filter(r=>filter==='すべて'||r.type===filter)
-  if(records.length===0){$('empty').classList.remove('hidden');$('list').innerHTML='';applyView();return}
+  if(records.length===0){$('empty').classList.remove('hidden');$('list').innerHTML='';return}
   $('empty').classList.add('hidden')
   $('list').innerHTML=items.map(r=>`
     <div class="card" data-id="${r.id}">
@@ -374,49 +328,8 @@ function render(){
       </div>
     </div>`).join('')
   $('list').querySelectorAll('.card').forEach(el=>el.onclick=()=>openEdit(el.dataset.id))
-  applyView()
 }
 function esc(s){return (s||'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]))}
-
-// ===== ビュー切替 & マップ =====
-function applyView(){
-  const mapMode=view==='map'
-  $('vt-list').classList.toggle('on',!mapMode)
-  $('vt-map').classList.toggle('on',mapMode)
-  $('map').style.display=mapMode?'block':'none'
-  $('list').style.display=mapMode?'none':'flex'
-  if(mapMode){$('empty').classList.add('hidden');renderMap()}
-}
-$('vt-list').onclick=()=>{view='list';applyView()}
-$('vt-map').onclick=()=>{view='map';applyView()}
-
-function ensureMap(){
-  if(map) return
-  map=L.map('map',{zoomControl:true}).setView([26.2124,127.6809],11)
-  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19,attribution:'© OpenStreetMap'}).addTo(map)
-  markerLayer=L.layerGroup().addTo(map)
-  map.on('popupopen',e=>{
-    const el=e.popup.getElement().querySelector('.pop-edit')
-    if(el) el.onclick=()=>{map.closePopup();openEdit(el.dataset.id)}
-  })
-}
-function renderMap(){
-  ensureMap()
-  markerLayer.clearLayers()
-  const items=records.filter(r=>r.lat!=null&&r.lng!=null).filter(r=>filter==='すべて'||r.type===filter)
-  const pts=[]
-  items.forEach(r=>{
-    const icon=L.divIcon({className:'',html:`<div class="mappin"></div>`,iconSize:[22,22],iconAnchor:[11,22],popupAnchor:[0,-22]})
-    L.marker([r.lat,r.lng],{icon}).addTo(markerLayer).bindPopup(
-      `<div class="pop-menu">${esc(r.menu)}</div>`+
-      (r.shop?`<div class="pop-shop">${esc(r.shop)}</div>`:'')+
-      (r.stars?`<div class="pop-stars">${'★'.repeat(r.stars)}</div>`:'')+
-      `<span class="pop-edit" data-id="${r.id}">編集する ›</span>`)
-    pts.push([r.lat,r.lng])
-  })
-  if(pts.length) map.fitBounds(pts,{padding:[40,40],maxZoom:15})
-  setTimeout(()=>map.invalidateSize(),60)
-}
 
 // ===== 種類グリッド =====
 $('typeGrid').innerHTML=TYPES.map(t=>`<div class="type-opt" data-t="${t}">${t}</div>`).join('')
@@ -473,7 +386,7 @@ function openAdd(){
   $('f-menu').value='';$('f-shop').value='';$('f-price').value='';$('f-memo').value=''
   $('f-date').value=todayStr()
   $('typeGrid').querySelectorAll('.type-opt').forEach(x=>x.classList.remove('on'))
-  paintStars();resetPhotoUI();paintLoc()
+  paintStars();resetPhotoUI()
   $('delBtn').classList.add('hidden')
   $('saveBtn').textContent='記録する'
   showSheet()
@@ -486,47 +399,12 @@ function openEdit(id){
   $('f-menu').value=r.menu||'';$('f-shop').value=r.shop||''
   $('f-price').value=r.price||'';$('f-memo').value=r.memo||'';$('f-date').value=r.date||todayStr()
   $('typeGrid').querySelectorAll('.type-opt').forEach(x=>x.classList.toggle('on',x.dataset.t===formType))
-  paintStars();paintPhoto();paintLoc()
+  paintStars();paintPhoto()
   $('delBtn').classList.remove('hidden')
   $('saveBtn').textContent='更新する'
   showSheet()
 }
 
-// ===== 場所の取得 =====
-function paintLoc(){
-  const el=$('locStatus')
-  if(formLat!=null&&formLng!=null){
-    el.classList.add('on')
-    el.textContent='✓ 場所を設定済み'+(formAddress?'：'+formAddress:`（${formLat.toFixed(4)}, ${formLng.toFixed(4)}）`)
-  }else{el.classList.remove('on');el.textContent=''}
-}
-$('locGeo').onclick=()=>{
-  if(!navigator.geolocation){toast('現在地が取得できない端末です');return}
-  toast('現在地を取得中…')
-  navigator.geolocation.getCurrentPosition(async pos=>{
-    formLat=pos.coords.latitude;formLng=pos.coords.longitude
-    paintLoc();reverseGeocode()
-  },()=>toast('現在地を取得できなかった'),{timeout:8000,enableHighAccuracy:true})
-}
-$('locSearch').onclick=async()=>{
-  const q=$('f-shop').value.trim()
-  if(!q){toast('先に「お店」を入力してね');return}
-  toast('店名で検索中…')
-  try{
-    const r=await fetch(`https://nominatim.openstreetmap.org/search?format=json&limit=1&q=${encodeURIComponent(q)}`,{headers:{'Accept-Language':'ja'}})
-    const j=await r.json()
-    if(!j.length){toast('場所が見つからなかった');return}
-    formLat=+j[0].lat;formLng=+j[0].lon;formAddress=(j[0].display_name||'').split(',').slice(0,3).join('、')
-    paintLoc();toast('場所を設定したよ')
-  }catch(e){toast('検索に失敗した…')}
-}
-async function reverseGeocode(){
-  try{
-    const r=await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${formLat}&lon=${formLng}`,{headers:{'Accept-Language':'ja'}})
-    const j=await r.json()
-    if(j&&j.display_name){formAddress=j.display_name.split(',').slice(0,3).join('、');paintLoc()}
-  }catch(e){/* best-effort */}
-}
 function showSheet(){$('mask').classList.add('on');$('sheet').classList.add('on')}
 function hideSheet(){$('mask').classList.remove('on');$('sheet').classList.remove('on')}
 $('mask').onclick=hideSheet
