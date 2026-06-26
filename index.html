@@ -77,7 +77,7 @@ body{font-family:'Zen Maru Gothic','Klee One',sans-serif;color:var(--ink);
 .list{display:flex;flex-direction:column;gap:14px;}
 .list-hint{font-size:11px;color:var(--ink-3);text-align:center;margin-bottom:12px;letter-spacing:.5px;}
 .card-wrap{position:relative;border-radius:6px;overflow:hidden;}
-.card-del{position:absolute;inset:0;display:flex;align-items:center;justify-content:flex-end;
+.card-del{position:absolute;inset:0;display:flex;align-items:center;justify-content:flex-end;cursor:pointer;
   padding-right:22px;background:var(--ink);color:#fff;font-weight:800;font-size:14px;letter-spacing:1px;}
 .card{display:flex;background:var(--card);border:1px solid var(--line);border-radius:6px;
   overflow:hidden;cursor:pointer;position:relative;touch-action:pan-y;
@@ -618,7 +618,7 @@ function render(){
   if(records.length===0){$('empty').classList.remove('hidden');$('list').innerHTML='';return}
   $('empty').classList.add('hidden')
   if(items.length===0){$('list').innerHTML='<div class="list-hint">該当する記録がないよ</div>';return}
-  $('list').innerHTML='<div class="list-hint">タップで詳細 ・ 左スワイプで削除</div>'+items.map(r=>`
+  $('list').innerHTML='<div class="list-hint">タップで詳細 ・ 左スワイプ→削除ボタン</div>'+items.map(r=>`
     <div class="card-wrap">
       <div class="card-del">削除</div>
       <div class="card" data-id="${r.id}">
@@ -697,32 +697,25 @@ $('dMask').onclick=hideDetail
 
 // ===== ジェスチャー操作 =====
 // カード: タップ=編集 / 左スワイプ=削除
+// カード: タップ=詳細 / 左スワイプで「削除」ボタンが出る → それをタップで削除（誤削除防止の2段階）
 function attachCard(el){
   const id=el.dataset.id
-  let sx=0,sy=0,dx=0,hor=false,swiped=false
+  const wrap=el.parentElement
+  const del=wrap?wrap.querySelector('.card-del'):null
+  const OPEN=-84
+  let sx=0,sy=0,dx=0,hor=false,open=false
+  function setOpen(o){open=o;el.style.transition='transform .2s';el.style.transform=`translateX(${o?OPEN:0}px)`}
   el.addEventListener('touchstart',e=>{
-    sx=e.touches[0].clientX;sy=e.touches[0].clientY;dx=0;hor=false;swiped=false
-    el.style.transition='none'
+    sx=e.touches[0].clientX;sy=e.touches[0].clientY;dx=open?OPEN:0;hor=false;el.style.transition='none'
   },{passive:true})
   el.addEventListener('touchmove',e=>{
     const mx=e.touches[0].clientX-sx,my=e.touches[0].clientY-sy
     if(!hor && Math.abs(mx)>Math.abs(my)+8) hor=true
-    if(hor){
-      e.preventDefault()
-      dx=Math.min(0,mx)
-      el.style.transform=`translateX(${dx}px)`
-      el.style.opacity=String(Math.max(.4,1+dx/260))
-    }
+    if(hor){ e.preventDefault(); dx=Math.max(-100,Math.min(0,(open?OPEN:0)+mx)); el.style.transform=`translateX(${dx}px)` }
   },{passive:false})
-  el.addEventListener('touchend',()=>{
-    el.style.transition=''
-    if(hor && dx<-110){
-      swiped=true
-      el.style.transform='translateX(-100%)';el.style.opacity='0'
-      setTimeout(()=>deleteRecord(id),170)
-    }else{ el.style.transform='';el.style.opacity='' }
-  })
-  el.addEventListener('click',()=>{ if(swiped||hor){return} openDetail(id) })
+  el.addEventListener('touchend',()=>{ if(hor) setOpen(dx<-42) })
+  el.addEventListener('click',()=>{ if(hor)return; if(open){setOpen(false);return} openDetail(id) })
+  if(del) del.onclick=()=>{ if(open) deleteRecord(id) }
 }
 function deleteRecord(id){
   const r=records.find(x=>x.id===id); const n=r?(r.photos||0):0
