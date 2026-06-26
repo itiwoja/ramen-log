@@ -15,21 +15,22 @@
 <title>麺帳 — 麺類の記録</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Yuji+Syuku&family=Klee+One:wght@400;600&family=Zen+Kaku+Gothic+New:wght@400;500;700;900&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Yomogi&family=Zen+Maru+Gothic:wght@400;500;700;900&display=swap" rel="stylesheet">
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
 :root{
-  /* インク(墨) × 和紙 のアナログ配色。アクセントは朱(印鑑) */
-  --paper:#F1E8D6;
-  --ink:#231F18;--ink-2:#5E5545;--ink-3:#9C907A;
-  --line:#D6C9AF;--line-2:#E7DCC4;
-  --card:#FBF6EA;
-  --shu:#C13F2E;
+  /* コラージュ/スクラップブック配色（紙＋マスキングテープ色） */
+  --paper:#F4F0E6;
+  --ink:#2B2823;--ink-2:#6B645A;--ink-3:#A89E8C;
+  --line:#E3DBCB;--line-2:#EEE8DA;
+  --card:#FFFFFF;
+  --tape1:#E3A53C;--tape2:#5BA597;--tape3:#D9756A;--tape4:#9A8BC2;
 }
 html,body{height:100%;}
-body{font-family:'Klee One','Zen Kaku Gothic New',sans-serif;color:var(--ink);
+body{font-family:'Zen Maru Gothic','Klee One',sans-serif;color:var(--ink);
   background-color:var(--paper);
-  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.7' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.05'/%3E%3C/svg%3E");
+  background-image:radial-gradient(rgba(43,40,35,.06) 1.2px, transparent 1.2px);
+  background-size:20px 20px;
   min-height:100dvh;overflow-x:hidden;-webkit-font-smoothing:antialiased;}
 .wrap{max-width:520px;margin:0 auto;padding:calc(env(safe-area-inset-top) + 14px) 20px 120px;}
 
@@ -248,23 +249,30 @@ body{font-family:'Klee One','Zen Kaku Gothic New',sans-serif;color:var(--ink);
 #toast.on{opacity:1;transform:translateX(-50%) translateY(0);}
 .hidden{display:none!important;}
 
-/* ===== インク × 和紙 アートスタイル ===== */
-/* 筆書体は見出し・料理名・数字に */
+/* ===== コラージュ / スクラップブック ===== */
+/* 手書き見出し */
 .logo-word,.sheet-title,.card-menu,.d-menu,.stat .v,.empty .e,.post-heading{
-  font-family:'Yuji Syuku',serif;font-weight:400;letter-spacing:1px;}
-/* ロゴを「印鑑(朱印)」風に */
-.logo-badge{background:var(--shu);color:#FBF6EA;border-radius:7px;transform:rotate(-3deg);
-  font-family:'Yuji Syuku',serif;box-shadow:0 2px 7px rgba(193,63,46,.4);}
-/* 朱のアクセント（評価★・主要アクション・ストリーク） */
-.stars{color:var(--shu);}
-.star-pick span.on{color:var(--shu);}
-.fab{background:var(--shu);box-shadow:0 7px 22px rgba(193,63,46,.42);}
-.save-btn{background:var(--shu);}
-.streak-line{background:rgba(193,63,46,.10);color:var(--shu);border:1px solid rgba(193,63,46,.28);}
-/* 手作り感のある余白と影 */
-.card{box-shadow:0 4px 14px rgba(35,31,24,.10);}
-.gear{border-color:var(--line);}
-.tchip,.tagb{border-color:var(--line);}
+  font-family:'Yomogi',cursive;letter-spacing:.5px;}
+/* ロゴ＝シール */
+.logo-badge{background:var(--tape3);color:#fff;border-radius:10px;transform:rotate(-4deg);
+  font-family:'Yomogi',cursive;box-shadow:0 3px 0 rgba(0,0,0,.12);}
+/* カード＝貼った写真風（傾き＋マステ＋影） */
+.card-wrap{overflow:visible;margin-bottom:22px;}
+.card-wrap:nth-child(3n){transform:rotate(-1.2deg);}
+.card-wrap:nth-child(3n+1){transform:rotate(.9deg);}
+.card{border:none;border-radius:9px;box-shadow:0 7px 16px rgba(43,40,35,.18);}
+.card-wrap::before{content:'';position:absolute;top:-10px;left:26px;width:66px;height:22px;z-index:4;
+  background:rgba(227,165,60,.6);transform:rotate(-6deg);box-shadow:0 1px 2px rgba(0,0,0,.08);}
+/* 種類/タグ＝シール */
+.tchip{background:var(--tape2);color:#fff;border:none;border-radius:9px;transform:rotate(-2deg);box-shadow:0 2px 0 rgba(0,0,0,.1);}
+.tagb{background:var(--tape4);color:#fff;}
+.stars{color:var(--tape1);}
+.star-pick span.on{color:var(--tape1);}
+/* ボタン＝シール */
+.fab{background:var(--tape3);border-radius:16px;transform:translateX(-50%) rotate(-2deg);box-shadow:0 6px 0 rgba(0,0,0,.16);}
+.fab:active{transform:translateX(-50%) rotate(-2deg) scale(.96);}
+.save-btn{background:var(--tape3);border-radius:14px;}
+.streak-line{background:#fff;border:2px dashed var(--tape3);color:var(--tape3);transform:rotate(-.5deg);}
 </style>
 </head>
 <body>
