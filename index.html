@@ -15,18 +15,21 @@
 <title>麺帳 — 麺類の記録</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Zen+Kaku+Gothic+New:wght@400;500;700;900&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Yuji+Syuku&family=Klee+One:wght@400;600&family=Zen+Kaku+Gothic+New:wght@400;500;700;900&display=swap" rel="stylesheet">
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
 :root{
-  /* 白と黒だけ。色は料理写真に任せる */
-  --paper:#FFFFFF;
-  --ink:#0B0B0B;--ink-2:#555555;--ink-3:#9A9A9A;
-  --line:#E6E6E6;--line-2:#F2F2F2;
-  --card:#FFFFFF;
+  /* インク(墨) × 和紙 のアナログ配色。アクセントは朱(印鑑) */
+  --paper:#F1E8D6;
+  --ink:#231F18;--ink-2:#5E5545;--ink-3:#9C907A;
+  --line:#D6C9AF;--line-2:#E7DCC4;
+  --card:#FBF6EA;
+  --shu:#C13F2E;
 }
 html,body{height:100%;}
-body{font-family:'Zen Kaku Gothic New',sans-serif;color:var(--ink);background:var(--paper);
+body{font-family:'Klee One','Zen Kaku Gothic New',sans-serif;color:var(--ink);
+  background-color:var(--paper);
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.7' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.05'/%3E%3C/svg%3E");
   min-height:100dvh;overflow-x:hidden;-webkit-font-smoothing:antialiased;}
 .wrap{max-width:520px;margin:0 auto;padding:calc(env(safe-area-inset-top) + 14px) 20px 120px;}
 
@@ -244,6 +247,24 @@ body{font-family:'Zen Kaku Gothic New',sans-serif;color:var(--ink);background:va
   opacity:0;transition:.3s;z-index:99;pointer-events:none;letter-spacing:.5px;}
 #toast.on{opacity:1;transform:translateX(-50%) translateY(0);}
 .hidden{display:none!important;}
+
+/* ===== インク × 和紙 アートスタイル ===== */
+/* 筆書体は見出し・料理名・数字に */
+.logo-word,.sheet-title,.card-menu,.d-menu,.stat .v,.empty .e,.post-heading{
+  font-family:'Yuji Syuku',serif;font-weight:400;letter-spacing:1px;}
+/* ロゴを「印鑑(朱印)」風に */
+.logo-badge{background:var(--shu);color:#FBF6EA;border-radius:7px;transform:rotate(-3deg);
+  font-family:'Yuji Syuku',serif;box-shadow:0 2px 7px rgba(193,63,46,.4);}
+/* 朱のアクセント（評価★・主要アクション・ストリーク） */
+.stars{color:var(--shu);}
+.star-pick span.on{color:var(--shu);}
+.fab{background:var(--shu);box-shadow:0 7px 22px rgba(193,63,46,.42);}
+.save-btn{background:var(--shu);}
+.streak-line{background:rgba(193,63,46,.10);color:var(--shu);border:1px solid rgba(193,63,46,.28);}
+/* 手作り感のある余白と影 */
+.card{box-shadow:0 4px 14px rgba(35,31,24,.10);}
+.gear{border-color:var(--line);}
+.tchip,.tagb{border-color:var(--line);}
 </style>
 </head>
 <body>
