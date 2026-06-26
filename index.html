@@ -3,47 +3,51 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no">
-<meta name="theme-color" content="#D7263D">
+<meta name="theme-color" content="#3E7C59">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <title>麺帳 — 麺類の記録</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Yuji+Syuku&family=Zen+Kaku+Gothic+New:wght@400;500;700;900&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Zen+Kaku+Gothic+New:wght@400;500;700;900&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
 :root{
-  --bg:#FBF3E7;--bg2:#F3E3C8;
-  --ink:#2A1E16;--ink-soft:#7A6A58;--ink-faint:#A8957E;
+  --bg:#F5F3ED;--bg2:#EEECE3;
+  --ink:#211F1A;--ink-soft:#6C6A60;--ink-faint:#A3A096;
   --card:#FFFFFF;
-  --noren:#D7263D;--noren-dark:#A81C2E;
-  --broth:#E8853A;--broth-soft:#F4C77E;
-  --nori:#2F3A3A;--menma:#E8C887;--negi:#7BA05B;
-  --line:rgba(42,30,22,.08);
+  /* brand = 落ち着いたグリーン / accent = 蜂蜜色(評価など) */
+  --noren:#3E7C59;--noren-dark:#2F5E44;
+  --broth:#C98A1E;--broth-soft:#E6D6AE;
+  --negi:#6E9457;
+  --line:rgba(33,31,26,.09);
   --radius:18px;
 }
 html,body{height:100%;}
 body{
   font-family:'Zen Kaku Gothic New',sans-serif;color:var(--ink);
   background:
-    radial-gradient(circle at 100% 0%, rgba(232,133,58,.12), transparent 40%),
-    radial-gradient(circle at 0% 100%, rgba(215,38,61,.08), transparent 45%),
-    linear-gradient(170deg,var(--bg),var(--bg2));
+    radial-gradient(circle at 100% 0%, rgba(62,124,89,.06), transparent 42%),
+    radial-gradient(circle at 0% 100%, rgba(201,138,30,.05), transparent 46%),
+    linear-gradient(175deg,var(--bg),var(--bg2));
   min-height:100dvh;overflow-x:hidden;
 }
 .wrap{max-width:520px;margin:0 auto;padding:calc(env(safe-area-inset-top) + 18px) 16px 120px;}
 
 /* header */
 .head{display:flex;align-items:flex-end;justify-content:space-between;margin-bottom:18px;}
-.logo{font-family:'Yuji Syuku',serif;font-size:32px;color:var(--ink);line-height:1;display:flex;align-items:center;gap:8px;}
-.logo .bowl{font-family:'Zen Kaku Gothic New';font-size:34px;}
-.logo-sub{font-size:11px;color:var(--ink-soft);letter-spacing:3px;margin-top:6px;font-weight:500;}
+.logo{display:flex;align-items:center;gap:10px;line-height:1;}
+.logo-badge{width:38px;height:38px;border-radius:11px;background:var(--noren);color:#fff;
+  display:flex;align-items:center;justify-content:center;font-size:21px;font-weight:900;
+  box-shadow:0 4px 12px rgba(62,124,89,.3);}
+.logo-word{font-size:26px;font-weight:900;color:var(--ink);letter-spacing:1.5px;}
+.logo-sub{font-size:10.5px;color:var(--ink-faint);letter-spacing:3px;margin-top:7px;font-weight:600;}
 .gear{width:42px;height:42px;border-radius:50%;border:none;background:var(--card);color:var(--ink-soft);
   font-size:20px;cursor:pointer;box-shadow:0 4px 14px rgba(42,30,22,.08);}
 .gear:active{transform:scale(.94);}
-.bk-info{font-size:12px;color:var(--ink-soft);line-height:1.7;background:rgba(232,133,58,.1);
+.bk-info{font-size:12px;color:var(--ink-soft);line-height:1.7;background:rgba(62,124,89,.09);
   border-radius:12px;padding:12px 14px;margin-bottom:16px;}
 .bk-btn{width:100%;border:1.5px solid var(--line);background:var(--card);border-radius:14px;
   padding:15px;font-family:inherit;font-size:15px;font-weight:700;color:var(--ink);cursor:pointer;
@@ -108,7 +112,7 @@ img.card-photo{object-fit:cover;}
   white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 .card-meta{display:flex;align-items:center;gap:8px;margin-top:7px;flex-wrap:wrap;}
 .tchip{font-size:10px;font-weight:700;padding:3px 9px;border-radius:999px;
-  background:rgba(232,133,58,.15);color:var(--broth);}
+  background:rgba(62,124,89,.12);color:var(--noren);}
 .stars{font-size:13px;color:var(--broth);letter-spacing:1px;}
 .stars .off{color:#E3D6C2;}
 .card-foot{display:flex;align-items:center;justify-content:space-between;margin-top:8px;}
@@ -125,7 +129,7 @@ img.card-photo{object-fit:cover;}
 .fab{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(env(safe-area-inset-bottom) + 22px);
   background:var(--noren);color:#fff;border:none;border-radius:999px;
   padding:15px 30px;font-family:inherit;font-size:16px;font-weight:900;cursor:pointer;
-  box-shadow:0 10px 26px rgba(215,38,61,.4);display:flex;align-items:center;gap:8px;z-index:40;}
+  box-shadow:0 10px 26px rgba(62,124,89,.38);display:flex;align-items:center;gap:8px;z-index:40;}
 .fab:active{transform:translateX(-50%) scale(.95);}
 
 /* sheet */
@@ -141,13 +145,13 @@ img.card-photo{object-fit:cover;}
 .sheet-title{font-size:20px;font-weight:900;text-align:center;margin-bottom:18px;}
 
 /* photo picker */
-.photo-pick{width:100%;height:170px;border-radius:16px;border:2px dashed var(--broth-soft);
-  background:rgba(232,133,58,.07);display:flex;align-items:center;justify-content:center;
+.photo-pick{width:100%;height:170px;border-radius:16px;border:2px dashed #CBD5C2;
+  background:rgba(62,124,89,.05);display:flex;align-items:center;justify-content:center;
   overflow:hidden;position:relative;margin-bottom:18px;}
 .photo-pick img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;}
 .pp-empty{display:flex;gap:12px;}
-.pp-opt{background:#fff;border:1.5px solid var(--broth-soft);border-radius:14px;
-  padding:14px 20px;font-family:inherit;font-size:13px;font-weight:700;color:var(--broth);cursor:pointer;
+.pp-opt{background:#fff;border:1.5px solid #CBD5C2;border-radius:14px;
+  padding:14px 20px;font-family:inherit;font-size:13px;font-weight:700;color:var(--noren);cursor:pointer;
   display:flex;flex-direction:column;align-items:center;gap:6px;min-width:96px;}
 .pp-opt:active{transform:scale(.96);}
 .pp-ico{font-size:30px;}
@@ -167,7 +171,7 @@ img.card-photo{object-fit:cover;}
 .type-grid{display:flex;flex-wrap:wrap;gap:8px;}
 .type-opt{padding:9px 14px;border-radius:999px;font-size:13px;font-weight:700;cursor:pointer;
   background:var(--card);color:var(--ink-soft);border:1.5px solid var(--line);}
-.type-opt.on{background:var(--broth);color:#fff;border-color:var(--broth);}
+.type-opt.on{background:var(--noren);color:#fff;border-color:var(--noren);}
 
 .star-pick{display:flex;gap:6px;}
 .star-pick span{font-size:34px;color:#E3D6C2;cursor:pointer;transition:transform .1s;}
@@ -176,7 +180,7 @@ img.card-photo{object-fit:cover;}
 
 .save-btn{width:100%;background:var(--noren);color:#fff;border:none;border-radius:14px;
   padding:16px;font-family:inherit;font-size:17px;font-weight:900;cursor:pointer;margin-top:6px;
-  box-shadow:0 8px 20px rgba(215,38,61,.3);}
+  box-shadow:0 8px 20px rgba(62,124,89,.3);}
 .save-btn:active{transform:scale(.98);}
 .del-btn{width:100%;background:transparent;color:var(--noren);border:none;
   padding:14px;font-family:inherit;font-size:14px;font-weight:700;cursor:pointer;margin-top:10px;}
@@ -192,8 +196,8 @@ img.card-photo{object-fit:cover;}
 <div class="wrap">
   <div class="head">
     <div>
-      <div class="logo"><span class="bowl">🍜</span>麺帳</div>
-      <div class="logo-sub">NOODLE LOG</div>
+      <div class="logo"><span class="logo-badge">麺</span><span class="logo-word">麺帳</span></div>
+      <div class="logo-sub">NOODLE JOURNAL</div>
     </div>
     <button class="gear" id="gear" aria-label="バックアップ">⚙</button>
   </div>
