@@ -75,8 +75,10 @@ body{font-family:'Zen Kaku Gothic New',sans-serif;color:var(--ink);background:va
   overflow:hidden;cursor:pointer;position:relative;touch-action:pan-y;
   transition:transform .16s ease, opacity .16s ease, border-color .15s;}
 .card:active{border-color:var(--ink-3);}
-.card-photo{width:96px;flex-shrink:0;align-self:stretch;object-fit:cover;min-height:104px;}
+.card-photo{width:96px;flex-shrink:0;align-self:stretch;object-fit:cover;min-height:104px;position:relative;}
 .card-photo.ph{background:var(--line-2);display:flex;align-items:center;justify-content:center;}
+.photo-n{position:absolute;right:4px;bottom:4px;background:rgba(11,11,11,.8);color:#fff;font-size:9px;
+  font-weight:800;padding:1px 6px;border-radius:6px;font-style:normal;}
 .card-photo.ph span{font-size:11px;color:var(--ink-3);font-weight:700;letter-spacing:1px;}
 .card-body{flex:1;padding:14px 16px;min-width:0;}
 .card-shop{font-size:11px;color:var(--ink-3);font-weight:600;letter-spacing:.5px;
@@ -118,10 +120,15 @@ body{font-family:'Zen Kaku Gothic New',sans-serif;color:var(--ink);background:va
 .sheet-title{font-size:18px;font-weight:900;letter-spacing:1px;margin:6px 0 22px;}
 
 /* photo picker — フラット */
-.photo-pick{width:100%;height:168px;border-radius:6px;border:1px dashed var(--line);
-  background:var(--line-2);display:flex;align-items:center;justify-content:center;
-  overflow:hidden;position:relative;margin-bottom:22px;}
-.photo-pick img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;}
+.photo-pick{width:100%;min-height:120px;border-radius:6px;border:1px dashed var(--line);
+  background:var(--line-2);display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:12px;padding:14px;margin-bottom:22px;}
+.photo-strip{display:flex;gap:8px;width:100%;overflow-x:auto;scrollbar-width:none;}
+.photo-strip::-webkit-scrollbar{display:none;}
+.ps-thumb{flex:0 0 auto;width:76px;height:76px;border-radius:6px;position:relative;
+  background:var(--line) center/cover no-repeat;}
+.ps-x{position:absolute;top:-6px;right:-6px;width:22px;height:22px;border-radius:50%;border:none;
+  background:var(--ink);color:#fff;font-size:12px;cursor:pointer;line-height:1;}
 .pp-empty{display:flex;gap:12px;}
 .pp-opt{background:var(--paper);border:1px solid var(--line);border-radius:8px;
   padding:14px 22px;font-family:inherit;font-size:13px;font-weight:700;color:var(--ink-2);cursor:pointer;
@@ -192,6 +199,9 @@ body{font-family:'Zen Kaku Gothic New',sans-serif;color:var(--ink);background:va
   display:flex;align-items:center;justify-content:center;margin-bottom:18px;}
 .d-photo img{width:100%;height:100%;object-fit:cover;}
 .d-photo .ph{font-size:13px;color:var(--ink-3);font-weight:700;letter-spacing:1px;}
+.d-gallery{display:flex;gap:8px;overflow-x:auto;margin-bottom:18px;scrollbar-width:none;}
+.d-gallery::-webkit-scrollbar{display:none;}
+.d-shot{flex:0 0 auto;width:78%;height:220px;border-radius:8px;background:var(--line-2) center/cover no-repeat;}
 .d-shop{font-size:12px;color:var(--ink-3);font-weight:600;letter-spacing:.5px;}
 .d-menu{font-size:24px;font-weight:900;color:var(--ink);margin-top:3px;line-height:1.3;}
 .d-meta{display:flex;align-items:center;gap:10px;margin-top:13px;}
@@ -263,7 +273,7 @@ body{font-family:'Zen Kaku Gothic New',sans-serif;color:var(--ink);background:va
 
   <div class="photo-pick" id="photoPick"></div>
   <input type="file" accept="image/*" capture="environment" id="camInput" class="hidden">
-  <input type="file" accept="image/*" id="libInput" class="hidden">
+  <input type="file" accept="image/*" multiple id="libInput" class="hidden">
 
   <div class="field">
     <label>メニュー名</label>
@@ -341,7 +351,8 @@ let records=load()
 let filter='すべて'
 let query='',sortBy='new'
 let editId=null
-let formPhoto=null
+let formPhotos=[]
+let exifApplied=false
 let formType=null
 let formStars=0
 let formLat=null,formLng=null,formAddress=''
@@ -363,7 +374,9 @@ function migrate(arr){
     id:r.id||uid(), menu:r.menu||'', shop:r.shop||'',
     type:r.type||null, stars:r.stars||0,
     price:r.price||'', date:r.date||'', memo:r.memo||'', tags:Array.isArray(r.tags)?r.tags:[],
-    // photo は旧形式(dataURL)を一旦保持。移行後は IndexedDB に移し hasPhoto のみ残す
+    // photos = 写真の枚数。実体は IndexedDB の "<id>#<i>" キー。
+    // photo(旧dataURL) / hasPhoto(旧単一) は移行処理が消費するため一旦保持。
+    photos:(typeof r.photos==='number')?r.photos:(r.hasPhoto?1:0),
     photo:r.photo||null, hasPhoto:!!r.hasPhoto,
     lat:(typeof r.lat==='number')?r.lat:null, lng:(typeof r.lng==='number')?r.lng:null,
     address:r.address||'',
@@ -400,6 +413,70 @@ function dataURLtoBlob(d){
   return new Blob([arr],{type:mime})
 }
 function blobToDataURL(blob){return new Promise(res=>{const r=new FileReader();r.onload=()=>res(r.result);r.readAsDataURL(blob)})}
+// 写真は "<recordId>#<index>" キーで複数保存
+function pkey(id,i){return `${id}#${i}`}
+
+// 画像を縮小して dataURL 化
+function resizeToDataURL(file){
+  return new Promise(res=>{
+    const reader=new FileReader()
+    reader.onload=ev=>{
+      const img=new Image()
+      img.onload=()=>{
+        const max=900,scale=Math.min(1,max/Math.max(img.width,img.height))
+        const cv=document.createElement('canvas')
+        cv.width=img.width*scale;cv.height=img.height*scale
+        cv.getContext('2d').drawImage(img,0,0,cv.width,cv.height)
+        res(cv.toDataURL('image/jpeg',0.8))
+      }
+      img.onerror=()=>res(null)
+      img.src=ev.target.result
+    }
+    reader.readAsDataURL(file)
+  })
+}
+
+// EXIF の DateTimeOriginal(0x9003) を読んで 'YYYY-MM-DD' を返す。失敗時 null。
+async function getExifDate(file){
+  try{
+    const buf=await file.arrayBuffer()
+    const dv=new DataView(buf)
+    if(dv.getUint16(0)!==0xFFD8) return null            // JPEGでない
+    let off=2
+    while(off+4<dv.byteLength){
+      const marker=dv.getUint16(off)
+      const size=dv.getUint16(off+2)
+      if(marker===0xFFE1){                                // APP1
+        const start=off+4
+        if(dv.getUint32(start)!==0x45786966) break        // "Exif"
+        const tiff=start+6
+        const le=dv.getUint16(tiff)===0x4949              // II=little / MM=big
+        const u16=o=>dv.getUint16(o,le), u32=o=>dv.getUint32(o,le)
+        const ifd0=tiff+u32(tiff+4)
+        const find=(base,tag)=>{
+          const n=u16(base)
+          for(let i=0;i<n;i++){const e=base+2+i*12; if(u16(e)===tag) return e}
+          return -1
+        }
+        const exifPtr=find(ifd0,0x8769)
+        if(exifPtr<0) return null
+        const exifIfd=tiff+u32(exifPtr+8)
+        const dt=find(exifIfd,0x9003)                     // DateTimeOriginal
+        if(dt<0) return null
+        const vOff=tiff+u32(dt+8)                          // ASCII "YYYY:MM:DD HH:MM:SS"
+        let s=''
+        for(let i=0;i<10;i++){const c=dv.getUint8(vOff+i); if(!c)break; s+=String.fromCharCode(c)}
+        const m=s.match(/^(\d{4}):(\d{2}):(\d{2})/)
+        return m?`${m[1]}-${m[2]}-${m[3]}`:null
+      }
+      if((marker&0xFF00)!==0xFF00) break
+      off+=2+size
+    }
+    return null
+  }catch(e){return null}
+}
+
+// 表示用 objectURL のキャッシュ
 
 // 表示用 objectURL のキャッシュ
 const photoURLs={}
@@ -412,16 +489,21 @@ function dropPhotoCache(id){if(photoURLs[id]){URL.revokeObjectURL(photoURLs[id])
 function fillPhotos(root){
   root.querySelectorAll('[data-pid]').forEach(async el=>{
     const u=await getPhotoURL(el.dataset.pid)
-    if(u){el.style.backgroundImage=`url("${u}")`;el.style.backgroundSize='cover';el.style.backgroundPosition='center';el.classList.remove('ph');el.innerHTML=''}
+    if(u){el.style.backgroundImage=`url("${u}")`;el.style.backgroundSize='cover';el.style.backgroundPosition='center';el.classList.remove('ph');const s=el.querySelector('span');if(s)s.remove()}
   })
 }
-// 起動時: 旧 localStorage 内の写真(dataURL)を IndexedDB へ一度だけ移行
-async function migratePhotos(){
+// 起動時: 旧形式の写真を新スキーム("<id>#<i>") へ一度だけ移行
+async function migratePhotosV2(){
   let changed=false
   for(const r of records){
     if(typeof r.photo==='string' && r.photo.startsWith('data:')){
-      try{ await idbPut(r.id,dataURLtoBlob(r.photo)); r.hasPhoto=true; r.photo=null; changed=true }
-      catch(e){/* 失敗時は dataURL を残す(消さない) */}
+      // 旧: localStorage 内 dataURL → IDB #0
+      try{ await idbPut(pkey(r.id,0),dataURLtoBlob(r.photo)); r.photos=1; r.photo=null; r.hasPhoto=false; changed=true }catch(e){}
+    } else if(r.hasPhoto && !(r.photos>0)){
+      // 旧: 単一IDB(key=id) → #0 へ移設
+      try{ const b=await idbGet(r.id); if(b){await idbPut(pkey(r.id,0),b);await idbDel(r.id)} r.photos=b?1:0; r.hasPhoto=false; changed=true }catch(e){}
+    } else if(r.hasPhoto && r.photos>0){
+      r.hasPhoto=false; changed=true
     }
   }
   if(changed){save();render()}
@@ -429,8 +511,8 @@ async function migratePhotos(){
 
 // 写真セルの HTML (旧dataURL / IDB / なし を吸収)
 function photoCell(r,cls){
+  if(r.photos>0) return `<div class="${cls} ph" data-pid="${pkey(r.id,0)}"><span>${esc(r.type)||'麺'}</span>${r.photos>1?`<i class="photo-n">+${r.photos-1}</i>`:''}</div>`
   if(r.photo) return `<img class="${cls}" src="${r.photo}">`
-  if(r.hasPhoto) return `<div class="${cls} ph" data-pid="${r.id}"><span>${esc(r.type)||'麺'}</span></div>`
   return `<div class="${cls} ph"><span>${esc(r.type)||'麺'}</span></div>`
 }
 
@@ -507,11 +589,14 @@ $('sort').onchange=e=>{sortBy=e.target.value;render()}
 // ===== 詳細表示 (メモも表示) =====
 function openDetail(id){
   const r=records.find(x=>x.id===id);if(!r)return
-  const dphoto = r.photo
-    ? `<div class="d-photo"><img src="${r.photo}"></div>`
-    : (r.hasPhoto
-        ? `<div class="d-photo" data-pid="${r.id}"><span class="ph">${esc(r.type)||'麺'}</span></div>`
-        : `<div class="d-photo"><span class="ph">${esc(r.type)||'麺'}</span></div>`)
+  let dphoto
+  if(r.photos>0){
+    dphoto=`<div class="d-gallery">`+Array.from({length:r.photos},(_,i)=>`<div class="d-shot" data-pid="${pkey(r.id,i)}"></div>`).join('')+`</div>`
+  } else if(r.photo){
+    dphoto=`<div class="d-photo"><img src="${r.photo}"></div>`
+  } else {
+    dphoto=`<div class="d-photo"><span class="ph">${esc(r.type)||'麺'}</span></div>`
+  }
   $('dContent').innerHTML=`
     ${dphoto}
     <div class="d-shop">${esc(r.shop)||'お店未設定'}</div>
@@ -562,8 +647,10 @@ function attachCard(el){
   el.addEventListener('click',()=>{ if(swiped||hor){return} openDetail(id) })
 }
 function deleteRecord(id){
-  records=records.filter(r=>r.id!==id);save();render();toast('削除したよ')
-  dropPhotoCache(id);idbDel(id).catch(()=>{})
+  const r=records.find(x=>x.id===id); const n=r?(r.photos||0):0
+  records=records.filter(x=>x.id!==id);save();render();toast('削除したよ')
+  for(let i=0;i<n;i++){dropPhotoCache(pkey(id,i));idbDel(pkey(id,i)).catch(()=>{})}
+  dropPhotoCache(id);idbDel(id).catch(()=>{}) // 旧キーも掃除
 }
 
 // シート: 下スワイプで閉じる
@@ -627,46 +714,38 @@ $('typeGrid').querySelectorAll('.type-opt').forEach(el=>el.onclick=()=>{
 $('starPick').querySelectorAll('span').forEach(el=>el.onclick=()=>{formStars=+el.dataset.v;paintStars()})
 function paintStars(){$('starPick').querySelectorAll('span').forEach(s=>s.classList.toggle('on',+s.dataset.v<=formStars))}
 
-// ===== 写真 (撮影 or アルバムから / リサイズして保存) =====
-function handlePhotoFile(file){
+// ===== 写真 (複数 / 撮影・アルバム / EXIFで日付自動) =====
+async function handlePhotoFile(file){
   if(!file) return
-  const reader=new FileReader()
-  reader.onload=ev=>{
-    const img=new Image()
-    img.onload=()=>{
-      const max=900,scale=Math.min(1,max/Math.max(img.width,img.height))
-      const cv=document.createElement('canvas')
-      cv.width=img.width*scale;cv.height=img.height*scale
-      cv.getContext('2d').drawImage(img,0,0,cv.width,cv.height)
-      formPhoto=cv.toDataURL('image/jpeg',0.8)
-      paintPhoto()
-    }
-    img.src=ev.target.result
+  // 撮影日(EXIF)は縮小前の元ファイルから読む。最初の1枚で日付欄が空なら自動入力。
+  if(!exifApplied){
+    const d=await getExifDate(file)
+    if(d && !$('f-date').value){ $('f-date').value=d }
+    exifApplied=true
   }
-  reader.readAsDataURL(file)
+  const dataURL=await resizeToDataURL(file)
+  if(dataURL){ formPhotos.push(dataURL); paintPhoto() }
 }
-$('camInput').onchange=e=>{handlePhotoFile(e.target.files[0]);e.target.value=''}
-$('libInput').onchange=e=>{handlePhotoFile(e.target.files[0]);e.target.value=''}
+$('camInput').onchange=async e=>{ for(const f of e.target.files){ await handlePhotoFile(f) } e.target.value='' }
+$('libInput').onchange=async e=>{ for(const f of e.target.files){ await handlePhotoFile(f) } e.target.value='' }
 
 function paintPhoto(){
-  const pp=$('photoPick')
-  if(formPhoto){
-    pp.innerHTML=`<img src="${formPhoto}"><button type="button" class="photo-clear" id="pc">✕</button>`
-    $('pc').onclick=ev=>{ev.stopPropagation();formPhoto=null;paintPhoto()}
-  }else{
-    pp.innerHTML=`<div class="pp-empty">
+  const strip=formPhotos.map((d,i)=>`<div class="ps-thumb" style="background-image:url('${d}')"><button type="button" class="ps-x" data-i="${i}">✕</button></div>`).join('')
+  $('photoPick').innerHTML=
+    (formPhotos.length?`<div class="photo-strip">${strip}</div>`:'')+
+    `<div class="pp-empty">
       <button type="button" class="pp-opt" id="ppCam"><span class="pp-ico">📷</span>撮影</button>
       <button type="button" class="pp-opt" id="ppLib"><span class="pp-ico">🖼</span>アルバム</button>
     </div>`
-    $('ppCam').onclick=()=>$('camInput').click()
-    $('ppLib').onclick=()=>$('libInput').click()
-  }
+  $('ppCam').onclick=()=>$('camInput').click()
+  $('ppLib').onclick=()=>$('libInput').click()
+  $('photoPick').querySelectorAll('.ps-x').forEach(b=>b.onclick=ev=>{ev.stopPropagation();formPhotos.splice(+b.dataset.i,1);paintPhoto()})
 }
-function resetPhotoUI(){formPhoto=null;paintPhoto()}
+function resetPhotoUI(){formPhotos=[];exifApplied=false;paintPhoto()}
 
 // ===== シート操作 =====
 function openAdd(){
-  editId=null;formPhoto=null;formType=null;formStars=0;formLat=null;formLng=null;formAddress='';formTags=new Set()
+  editId=null;formType=null;formStars=0;formLat=null;formLng=null;formAddress='';formTags=new Set()
   $('sheet-title').textContent='麺を記録'
   $('f-menu').value='';$('f-shop').value='';$('f-price').value='';$('f-memo').value=''
   $('f-date').value=todayStr()
@@ -680,10 +759,10 @@ async function openEdit(id){
   const r=records.find(x=>x.id===id);if(!r)return
   editId=id;formType=r.type||null;formStars=r.stars||0;formTags=new Set(r.tags||[])
   formLat=(typeof r.lat==='number')?r.lat:null;formLng=(typeof r.lng==='number')?r.lng:null;formAddress=r.address||''
-  // 既存写真をフォーム用 dataURL として読み込む (旧 dataURL or IDB)
-  if(r.photo) formPhoto=r.photo
-  else if(r.hasPhoto){const b=await idbGet(id);formPhoto=b?await blobToDataURL(b):null}
-  else formPhoto=null
+  // 既存写真をフォーム用 dataURL として読み込む
+  formPhotos=[]; exifApplied=true   // 編集時は日付を自動上書きしない
+  for(let i=0;i<(r.photos||0);i++){const b=await idbGet(pkey(id,i)); if(b)formPhotos.push(await blobToDataURL(b))}
+  if(!formPhotos.length && r.photo) formPhotos.push(r.photo)  // 移行前フォールバック
   $('sheet-title').textContent='記録を編集'
   $('f-menu').value=r.menu||'';$('f-shop').value=r.shop||''
   $('f-price').value=r.price||'';$('f-memo').value=r.memo||'';$('f-date').value=r.date||todayStr()
@@ -703,18 +782,19 @@ $('saveBtn').onclick=async()=>{
   const menu=$('f-menu').value.trim()
   if(!menu){toast('メニュー名を入れてね');$('f-menu').focus();return}
   const id=editId||uid()
-  // 写真は IndexedDB へ (localStorage には入れない)
+  // 写真は IndexedDB へ複数保存（localStorage には入れない）
+  const oldCount = editId ? ((records.find(r=>r.id===editId)||{}).photos||0) : 0
   try{
-    if(formPhoto) await idbPut(id,dataURLtoBlob(formPhoto))
-    else await idbDel(id)
+    for(let i=0;i<formPhotos.length;i++){ await idbPut(pkey(id,i),dataURLtoBlob(formPhotos[i])); dropPhotoCache(pkey(id,i)) }
+    for(let i=formPhotos.length;i<oldCount;i++){ await idbDel(pkey(id,i)); dropPhotoCache(pkey(id,i)) }
   }catch(e){toast('写真の保存に失敗…')}
-  dropPhotoCache(id)
   const rec={
     id,
     menu, shop:$('f-shop').value.trim(),
     type:formType, stars:formStars,
     price:$('f-price').value.trim(), date:$('f-date').value.trim()||todayStr(),
-    memo:$('f-memo').value.trim(), tags:[...formTags], photo:null, hasPhoto:!!formPhoto,
+    memo:$('f-memo').value.trim(), tags:[...formTags],
+    photos:formPhotos.length, photo:null,
     lat:formLat, lng:formLng, address:formAddress,
   }
   if(editId){records=records.map(r=>r.id===editId?rec:r);toast('更新したよ')}
@@ -724,7 +804,7 @@ $('saveBtn').onclick=async()=>{
 }
 $('delBtn').onclick=()=>{
   if(!editId)return
-  records=records.filter(r=>r.id!==editId);save();hideSheet();render();toast('削除したよ')
+  const id=editId;hideSheet();deleteRecord(id)
 }
 
 function todayStr(){const d=new Date();return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`}
@@ -739,7 +819,9 @@ $('exportBtn').onclick=async()=>{
   const out=[]
   for(const r of records){
     const rec={...r}
-    if(rec.hasPhoto && !rec.photo){const b=await idbGet(r.id);if(b)rec.photo=await blobToDataURL(b)}
+    rec.photosData=[]
+    for(let i=0;i<(r.photos||0);i++){const b=await idbGet(pkey(r.id,i)); if(b)rec.photosData.push(await blobToDataURL(b))}
+    delete rec.photo
     out.push(rec)
   }
   const data={app:'mencho',version:DATA_VERSION,exportedAt:new Date().toISOString(),records:out}
@@ -757,14 +839,19 @@ $('importInput').onchange=e=>{
   reader.onload=async ev=>{
     try{
       const parsed=JSON.parse(ev.target.result)
-      const incoming=migrate(Array.isArray(parsed)?parsed:(parsed.records||[]))
-      if(!incoming.length){toast('読み込めるデータが無かったよ');return}
-      // バックアップ内の写真(dataURL)を IndexedDB へ移し、localStorage は軽く保つ
-      for(const r of incoming){
-        if(typeof r.photo==='string' && r.photo.startsWith('data:')){
-          try{await idbPut(r.id,dataURLtoBlob(r.photo));r.hasPhoto=true;r.photo=null;dropPhotoCache(r.id)}catch(e){}
+      const raw=Array.isArray(parsed)?parsed:(parsed.records||[])
+      if(!raw.length){toast('読み込めるデータが無かったよ');return}
+      // バックアップ内の写真を IndexedDB(#i)へ移す（migrate前に処理：migrateはphotosDataを落とすため）
+      for(const r of raw){
+        if(Array.isArray(r.photosData)&&r.photosData.length){
+          for(let i=0;i<r.photosData.length;i++){try{await idbPut(pkey(r.id,i),dataURLtoBlob(r.photosData[i]));dropPhotoCache(pkey(r.id,i))}catch(e){}}
+          r.photos=r.photosData.length
+        } else if(typeof r.photo==='string'&&r.photo.startsWith('data:')){
+          try{await idbPut(pkey(r.id,0),dataURLtoBlob(r.photo));r.photos=1;dropPhotoCache(pkey(r.id,0))}catch(e){}
         }
+        delete r.photosData; r.photo=null
       }
+      const incoming=migrate(raw)
       const byId={}
       records.forEach(r=>byId[r.id]=r)
       incoming.forEach(r=>byId[r.id]=r)
@@ -792,8 +879,8 @@ if(_p.get('q')){query=_p.get('q');$('search').value=query}
 if(_p.get('tag')){activeTag=_p.get('tag')}
 
 render()
-// 旧 localStorage 内の写真を IndexedDB へ一度だけ移行
-migratePhotos()
+// 旧形式の写真を新スキームへ一度だけ移行
+migratePhotosV2()
 
 // オフライン対応 (Service Worker)
 if('serviceWorker' in navigator){addEventListener('load',()=>navigator.serviceWorker.register('sw.js').catch(()=>{}))}
