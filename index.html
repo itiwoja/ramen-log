@@ -49,6 +49,16 @@ body{font-family:'Zen Kaku Gothic New',sans-serif;color:var(--ink);background:va
 .fchip{flex-shrink:0;padding:6px 14px;border-radius:999px;font-size:12px;font-weight:700;cursor:pointer;
   background:transparent;color:var(--ink-2);border:1px solid var(--line);}
 .fchip.on{background:var(--ink);color:var(--paper);border-color:var(--ink);}
+.fchip.tag{font-size:11px;color:var(--ink-3);}
+.fchip.tag.on{background:var(--ink);color:var(--paper);border-color:var(--ink);}
+#tagFilters{margin-top:-8px;}
+#tagFilters:empty{display:none;}
+
+/* タグのバッジ */
+.card-tags{display:flex;flex-wrap:wrap;gap:5px;margin-top:9px;}
+.tagb{font-size:10px;font-weight:700;color:var(--ink-2);background:var(--line-2);border-radius:5px;padding:2px 7px;}
+.d-tags{display:flex;flex-wrap:wrap;gap:6px;margin-top:13px;}
+.wchip.on{background:var(--ink);color:var(--paper);border-color:var(--ink);}
 
 /* list — 影なし・薄い罫線・写真が主役 */
 .list{display:flex;flex-direction:column;gap:14px;}
@@ -203,6 +213,7 @@ body{font-family:'Zen Kaku Gothic New',sans-serif;color:var(--ink);background:va
       <div class="logo-word">麺帳</div>
     </div>
     <div class="head-actions">
+      <a class="gear" href="stats.html" aria-label="分析">統</a>
       <a class="gear" href="wiki.html" aria-label="用語辞典">辞</a>
       <button class="gear" id="gear" aria-label="データの管理">⚙</button>
     </div>
@@ -227,6 +238,7 @@ body{font-family:'Zen Kaku Gothic New',sans-serif;color:var(--ink);background:va
   </div>
 
   <div class="filters" id="filters"></div>
+  <div class="filters" id="tagFilters"></div>
 
   <div class="list" id="list"></div>
   <div class="empty hidden" id="empty">
@@ -277,7 +289,11 @@ body{font-family:'Zen Kaku Gothic New',sans-serif;color:var(--ink);background:va
   <div class="field">
     <label>ひとことメモ</label>
     <textarea id="f-memo" placeholder="コシが最高だった。出汁がきいてて美味しい。" maxlength="140"></textarea>
-    <div class="word-hint">タップで用語をいれる ・ <a href="wiki.html" target="_blank" rel="noopener">辞典</a></div>
+  </div>
+
+  <div class="field">
+    <label>タグ（用語）</label>
+    <div class="word-hint">タップで付ける ・ <a href="wiki.html" target="_blank" rel="noopener">辞典で意味を見る</a></div>
     <div class="word-chips" id="wordChips"></div>
   </div>
 
@@ -324,6 +340,8 @@ let formPhoto=null
 let formType=null
 let formStars=0
 let formLat=null,formLng=null,formAddress=''
+let formTags=new Set()
+let activeTag=null
 
 // 読み込み: 旧形式(配列) / 新形式({version,records}) どちらも受ける = 更新でデータを失わない
 function load(){
@@ -339,7 +357,7 @@ function migrate(arr){
   return arr.filter(Boolean).map(r=>({
     id:r.id||uid(), menu:r.menu||'', shop:r.shop||'',
     type:r.type||null, stars:r.stars||0,
-    price:r.price||'', date:r.date||'', memo:r.memo||'',
+    price:r.price||'', date:r.date||'', memo:r.memo||'', tags:Array.isArray(r.tags)?r.tags:[],
     // photo は旧形式(dataURL)を一旦保持。移行後は IndexedDB に移し hasPhoto のみ残す
     photo:r.photo||null, hasPhoto:!!r.hasPhoto,
     lat:(typeof r.lat==='number')?r.lat:null, lng:(typeof r.lng==='number')?r.lng:null,
@@ -431,8 +449,13 @@ function render(){
   $('filters').innerHTML=fopts.map(f=>`<div class="fchip ${f===filter?'on':''}" data-f="${f}">${f}</div>`).join('')
   $('filters').querySelectorAll('.fchip').forEach(el=>el.onclick=()=>{filter=el.dataset.f;render()})
 
-  let items=records.filter(r=>filter==='すべて'||r.type===filter)
-  if(query){const q=query.toLowerCase();items=items.filter(r=>`${r.menu||''} ${r.shop||''} ${r.memo||''}`.toLowerCase().includes(q))}
+  // タグの絞り込み行
+  const allTags=[...new Set(records.flatMap(r=>r.tags||[]))]
+  $('tagFilters').innerHTML=allTags.map(t=>`<div class="fchip tag ${t===activeTag?'on':''}" data-t="${esc(t)}">#${esc(t)}</div>`).join('')
+  $('tagFilters').querySelectorAll('.fchip').forEach(el=>el.onclick=()=>{activeTag=(activeTag===el.dataset.t)?null:el.dataset.t;render()})
+
+  let items=records.filter(r=>(filter==='すべて'||r.type===filter)&&(!activeTag||(r.tags||[]).includes(activeTag)))
+  if(query){const q=query.toLowerCase();items=items.filter(r=>`${r.menu||''} ${r.shop||''} ${r.memo||''} ${(r.tags||[]).join(' ')}`.toLowerCase().includes(q))}
   items=sortItems(items)
   if(records.length===0){$('empty').classList.remove('hidden');$('list').innerHTML='';return}
   $('empty').classList.add('hidden')
@@ -449,6 +472,7 @@ function render(){
             ${r.type?`<span class="tchip">${esc(r.type)}</span>`:''}
             ${r.stars?starHTML(r.stars):''}
           </div>
+          ${(r.tags&&r.tags.length)?`<div class="card-tags">${r.tags.map(t=>`<span class="tagb">#${esc(t)}</span>`).join('')}</div>`:''}
           <div class="card-foot">
             <span class="card-date">${r.date||''}</span>
             ${r.price?`<span class="card-price">¥${Number(r.price).toLocaleString()}</span>`:''}
@@ -488,6 +512,7 @@ function openDetail(id){
     <div class="d-shop">${esc(r.shop)||'お店未設定'}</div>
     <div class="d-menu">${esc(r.menu)||'（無題）'}</div>
     <div class="d-meta">${r.type?`<span class="tchip">${esc(r.type)}</span>`:''}${r.stars?starHTML(r.stars):''}</div>
+    ${(r.tags&&r.tags.length)?`<div class="d-tags">${r.tags.map(t=>`<span class="tagb">#${esc(t)}</span>`).join('')}</div>`:''}
     <div class="d-sub">${r.date||''}${r.price?' ・ ¥'+Number(r.price).toLocaleString():''}</div>
     ${r.memo?`<div class="d-memo">${esc(r.memo)}</div>`:''}
     <div class="d-actions">
@@ -556,16 +581,15 @@ function makeSwipeable(sheet,onClose){
   })
 }
 
-// ===== メモ用 スラング用語チップ (タップで挿入) =====
-const INSERT_WORDS=['沼麺','スープ完飲','替玉案件','麺ロス','★5殿堂','リピ確','隠れ名店','無限すすり','二郎不可避','麺デビュー','コシ勢','スープ勢']
-$('wordChips').innerHTML=INSERT_WORDS.map(w=>`<button type="button" class="wchip" data-w="${w}">${w}</button>`).join('')
+// ===== スラング用語タグ (タップでトグル) =====
+const TAG_WORDS=['沼麺','スープ完飲','替玉案件','麺ロス','★5殿堂','リピ確','隠れ名店','無限すすり','二郎不可避','麺デビュー','コシ勢','スープ勢']
+$('wordChips').innerHTML=TAG_WORDS.map(w=>`<button type="button" class="wchip" data-w="${w}">${w}</button>`).join('')
 $('wordChips').querySelectorAll('.wchip').forEach(b=>b.onclick=()=>{
-  const ta=$('f-memo'),cur=ta.value,ins=b.dataset.w
-  const sep=(cur && !/\s$/.test(cur))?' ':''
-  let next=cur+sep+ins
-  if(next.length>140)next=next.slice(0,140)
-  ta.value=next;ta.focus()
+  const w=b.dataset.w
+  formTags.has(w)?formTags.delete(w):formTags.add(w)
+  paintTags()
 })
+function paintTags(){$('wordChips').querySelectorAll('.wchip').forEach(b=>b.classList.toggle('on',formTags.has(b.dataset.w)))}
 
 // ===== 種類グリッド =====
 $('typeGrid').innerHTML=TYPES.map(t=>`<div class="type-opt" data-t="${t}">${t}</div>`).join('')
@@ -617,19 +641,19 @@ function resetPhotoUI(){formPhoto=null;paintPhoto()}
 
 // ===== シート操作 =====
 function openAdd(){
-  editId=null;formPhoto=null;formType=null;formStars=0;formLat=null;formLng=null;formAddress=''
+  editId=null;formPhoto=null;formType=null;formStars=0;formLat=null;formLng=null;formAddress='';formTags=new Set()
   $('sheet-title').textContent='麺を記録'
   $('f-menu').value='';$('f-shop').value='';$('f-price').value='';$('f-memo').value=''
   $('f-date').value=todayStr()
   $('typeGrid').querySelectorAll('.type-opt').forEach(x=>x.classList.remove('on'))
-  paintStars();resetPhotoUI()
+  paintStars();resetPhotoUI();paintTags()
   $('delBtn').classList.add('hidden')
   $('saveBtn').textContent='記録する'
   showSheet()
 }
 async function openEdit(id){
   const r=records.find(x=>x.id===id);if(!r)return
-  editId=id;formType=r.type||null;formStars=r.stars||0
+  editId=id;formType=r.type||null;formStars=r.stars||0;formTags=new Set(r.tags||[])
   formLat=(typeof r.lat==='number')?r.lat:null;formLng=(typeof r.lng==='number')?r.lng:null;formAddress=r.address||''
   // 既存写真をフォーム用 dataURL として読み込む (旧 dataURL or IDB)
   if(r.photo) formPhoto=r.photo
@@ -639,7 +663,7 @@ async function openEdit(id){
   $('f-menu').value=r.menu||'';$('f-shop').value=r.shop||''
   $('f-price').value=r.price||'';$('f-memo').value=r.memo||'';$('f-date').value=r.date||todayStr()
   $('typeGrid').querySelectorAll('.type-opt').forEach(x=>x.classList.toggle('on',x.dataset.t===formType))
-  paintStars();paintPhoto()
+  paintStars();paintPhoto();paintTags()
   $('delBtn').classList.remove('hidden')
   $('saveBtn').textContent='更新する'
   showSheet()
@@ -665,7 +689,7 @@ $('saveBtn').onclick=async()=>{
     menu, shop:$('f-shop').value.trim(),
     type:formType, stars:formStars,
     price:$('f-price').value.trim(), date:$('f-date').value.trim()||todayStr(),
-    memo:$('f-memo').value.trim(), photo:null, hasPhoto:!!formPhoto,
+    memo:$('f-memo').value.trim(), tags:[...formTags], photo:null, hasPhoto:!!formPhoto,
     lat:formLat, lng:formLng, address:formAddress,
   }
   if(editId){records=records.map(r=>r.id===editId?rec:r);toast('更新したよ')}
@@ -736,6 +760,11 @@ function toast(m){const t=$('toast');t.textContent=m;t.classList.add('on');clear
 makeSwipeable($('sheet'),hideSheet)
 makeSwipeable($('bkSheet'),hideBackup)
 makeSwipeable($('dSheet'),hideDetail)
+
+// 他ページ(分析)からの絞り込みリンク (?q=店名 / ?tag=タグ)
+const _p=new URLSearchParams(location.search)
+if(_p.get('q')){query=_p.get('q');$('search').value=query}
+if(_p.get('tag')){activeTag=_p.get('tag')}
 
 render()
 // 旧 localStorage 内の写真を IndexedDB へ一度だけ移行
