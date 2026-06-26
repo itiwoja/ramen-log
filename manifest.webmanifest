@@ -1,0 +1,15 @@
+{
+  "name": "麺帳",
+  "short_name": "麺帳",
+  "description": "麺類の記録 — ラーメンもうどんもパスタも。",
+  "lang": "ja",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#FFFFFF",
+  "theme_color": "#FFFFFF",
+  "icons": [
+    { "src": "icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }
+  ]
+}
