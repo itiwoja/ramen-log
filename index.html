@@ -49,6 +49,9 @@ body{font-family:'Zen Kaku Gothic New',sans-serif;color:var(--ink);background:va
 .stat .v small{font-size:11px;font-weight:700;color:var(--ink-3);margin-left:1px;}
 .stat .l{font-size:9px;color:var(--ink-3);margin-top:7px;font-weight:700;letter-spacing:1px;}
 
+.streak-line{display:none;text-align:center;font-size:13px;font-weight:800;color:var(--ink);
+  background:var(--line-2);border-radius:8px;padding:8px;margin-bottom:14px;letter-spacing:.5px;}
+
 /* filter — 角丸アウトライン / アクティブは墨ベタ(モノクロ) */
 .filters{display:flex;gap:8px;overflow-x:auto;padding-bottom:2px;margin-bottom:18px;scrollbar-width:none;}
 .filters::-webkit-scrollbar{display:none;}
@@ -263,6 +266,8 @@ body{font-family:'Zen Kaku Gothic New',sans-serif;color:var(--ink);background:va
     <div class="stat"><div class="v" id="st-total">¥0</div><div class="l">合計</div></div>
     <div class="stat"><div class="v" id="st-fav" style="font-size:14px">–</div><div class="l">MFN</div></div>
   </div>
+
+  <div id="streakLine" class="streak-line"></div>
 
   <div class="toolbar">
     <input class="search" id="search" type="text" placeholder="検索（メニュー・お店）" autocomplete="off">
@@ -560,6 +565,13 @@ function render(){
     const fav=Object.entries(c).sort((a,b)=>b[1]-a[1])[0]
     $('st-fav').textContent=fav?fav[0]:'–'
   }else $('st-fav').textContent='–'
+  // 連続記録ストリーク
+  if(window.computeStreak){
+    const st=computeStreak(records)
+    const el=$('streakLine')
+    if(st.current>=2){el.style.display='block';el.textContent=`🔥 ${st.current}日連続 麺活中！`}
+    else{el.style.display='none';el.textContent=''}
+  }
 
   const present=[...new Set(records.map(r=>r.type).filter(Boolean))]
   const fopts=['すべて',...present]

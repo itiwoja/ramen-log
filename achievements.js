@@ -17,6 +17,21 @@
   }
   const MASTER={ 'ラーメン':'ラーメン仙人','うどん':'うどんの神','そば':'蕎麦の鬼','パスタ':'マンマの味' }
 
+  // 連続記録(ストリーク)を計算: {current, longest, days}
+  function streakInfo(records){
+    const set=new Set(records.map(r=>r.date).filter(Boolean))
+    const toISO=dt=>`${dt.getFullYear()}-${String(dt.getMonth()+1).padStart(2,'0')}-${String(dt.getDate()).padStart(2,'0')}`
+    const add=(d,n)=>{const z=new Date(d+'T00:00:00');z.setDate(z.getDate()+n);return toISO(z)}
+    const sorted=[...set].sort()
+    let longest=0,run=0,prev=null
+    for(const d of sorted){ run=(prev&&add(prev,1)===d)?run+1:1; longest=Math.max(longest,run); prev=d }
+    const today=toISO(new Date())
+    let c = set.has(today)?today : (set.has(add(today,-1))?add(today,-1):null)
+    let cur=0
+    while(c && set.has(c)){cur++; c=add(c,-1)}
+    return {current:cur,longest,days:set.size}
+  }
+
   function computeAchievements(records){
     const list=[]
     const gc=g=>records.filter(r=>r.type===g).length
@@ -42,8 +57,13 @@
     add('photo10','総合','麺フォトグラファー','写真つき10件',records.filter(r=>(r.photos||0)>0||r.photo).length,10)
     const byday={}; records.forEach(r=>{if(r.date)byday[r.date]=(byday[r.date]||0)+1})
     add('double','総合','ダブル麺','1日に2杯',Math.max(0,...Object.values(byday),0),2)
+    const st=streakInfo(records)
+    add('streak3','総合','3日連続 麺活','3日連続で記録',st.longest,3)
+    add('streak7','総合','一週間 麺活','7日連続で記録',st.longest,7)
+    add('streak30','総合','麺活マスター','30日連続で記録',st.longest,30)
     return list
   }
   window.computeAchievements=computeAchievements
+  window.computeStreak=streakInfo
   window.MENCHO_GENRES=GENRES
 })();
