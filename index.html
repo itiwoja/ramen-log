@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no">
-<meta name="theme-color" content="#3E7C59">
+<meta name="theme-color" content="#FAF9F6">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <title>麺帳 — 麺類の記録</title>
@@ -15,179 +15,171 @@
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
 :root{
-  --bg:#F5F3ED;--bg2:#EEECE3;
-  --ink:#211F1A;--ink-soft:#6C6A60;--ink-faint:#A3A096;
+  /* ほぼモノクロ: 色は料理写真に任せる。UIは紙×墨×罫線＋差し色1色のみ */
+  --paper:#FAF9F6;
+  --ink:#1A1714;--ink-2:#605C54;--ink-3:#A6A096;
+  --line:#E7E3DA;--line-2:#EFECE4;
   --card:#FFFFFF;
-  /* brand = 落ち着いたグリーン / accent = 蜂蜜色(評価など) */
-  --noren:#3E7C59;--noren-dark:#2F5E44;
-  --broth:#C98A1E;--broth-soft:#E6D6AE;
-  --negi:#6E9457;
-  --line:rgba(33,31,26,.09);
-  --radius:18px;
+  --accent:#C8761E;   /* 差し色は評価★とアクティブのみ */
 }
 html,body{height:100%;}
-body{
-  font-family:'Zen Kaku Gothic New',sans-serif;color:var(--ink);
-  background:
-    radial-gradient(circle at 100% 0%, rgba(62,124,89,.06), transparent 42%),
-    radial-gradient(circle at 0% 100%, rgba(201,138,30,.05), transparent 46%),
-    linear-gradient(175deg,var(--bg),var(--bg2));
-  min-height:100dvh;overflow-x:hidden;
-}
-.wrap{max-width:520px;margin:0 auto;padding:calc(env(safe-area-inset-top) + 18px) 16px 120px;}
+body{font-family:'Zen Kaku Gothic New',sans-serif;color:var(--ink);background:var(--paper);
+  min-height:100dvh;overflow-x:hidden;-webkit-font-smoothing:antialiased;}
+.wrap{max-width:520px;margin:0 auto;padding:calc(env(safe-area-inset-top) + 14px) 20px 120px;}
 
 /* header */
-.head{display:flex;align-items:flex-end;justify-content:space-between;margin-bottom:18px;}
-.logo{display:flex;align-items:center;gap:10px;line-height:1;}
-.logo-badge{width:38px;height:38px;border-radius:11px;background:var(--noren);color:#fff;
-  display:flex;align-items:center;justify-content:center;font-size:21px;font-weight:900;
-  box-shadow:0 4px 12px rgba(62,124,89,.3);}
-.logo-word{font-size:26px;font-weight:900;color:var(--ink);letter-spacing:1.5px;}
-.logo-sub{font-size:10.5px;color:var(--ink-faint);letter-spacing:3px;margin-top:7px;font-weight:600;}
-.gear{width:42px;height:42px;border-radius:50%;border:none;background:var(--card);color:var(--ink-soft);
-  font-size:20px;cursor:pointer;box-shadow:0 4px 14px rgba(42,30,22,.08);}
-.gear:active{transform:scale(.94);}
-.bk-info{font-size:12px;color:var(--ink-soft);line-height:1.7;background:rgba(62,124,89,.09);
-  border-radius:12px;padding:12px 14px;margin-bottom:16px;}
-.bk-btn{width:100%;border:1.5px solid var(--line);background:var(--card);border-radius:14px;
-  padding:15px;font-family:inherit;font-size:15px;font-weight:700;color:var(--ink);cursor:pointer;
-  margin-bottom:10px;display:flex;align-items:center;gap:10px;justify-content:center;}
-.bk-btn:active{transform:scale(.98);}
-.bk-btn .bi{font-size:18px;}
+.head{display:flex;align-items:center;justify-content:space-between;
+  padding-bottom:16px;border-bottom:1px solid var(--line);margin-bottom:20px;}
+.logo-word{font-size:23px;font-weight:900;color:var(--ink);letter-spacing:2px;}
+.logo-sub{font-size:9.5px;color:var(--ink-3);letter-spacing:3.5px;margin-top:4px;font-weight:700;}
+.gear{width:38px;height:38px;border-radius:50%;border:1px solid var(--line);background:transparent;
+  color:var(--ink-2);font-size:17px;cursor:pointer;}
+.gear:active{background:var(--line-2);}
 
-/* stats */
-.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:18px;}
-.stat{background:var(--card);border-radius:14px;padding:11px 6px;text-align:center;
-  box-shadow:0 4px 14px rgba(42,30,22,.06);}
-.stat .v{font-size:18px;font-weight:900;color:var(--noren);font-family:'Zen Kaku Gothic New';line-height:1;}
-.stat .v small{font-size:10px;font-weight:700;}
-.stat .l{font-size:9.5px;color:var(--ink-faint);margin-top:5px;font-weight:500;}
+/* stats — カードでなく罫線で区切るフラットな数値帯 */
+.stats{display:flex;border-top:1px solid var(--line);border-bottom:1px solid var(--line);margin-bottom:22px;}
+.stat{flex:1;padding:14px 4px;text-align:center;}
+.stat + .stat{border-left:1px solid var(--line);}
+.stat .v{font-size:21px;font-weight:900;color:var(--ink);line-height:1;letter-spacing:.5px;}
+.stat .v small{font-size:11px;font-weight:700;color:var(--ink-3);margin-left:1px;}
+.stat .l{font-size:9px;color:var(--ink-3);margin-top:7px;font-weight:700;letter-spacing:1px;}
 
-/* view toggle */
-.viewtoggle{display:flex;gap:6px;background:var(--card);border-radius:999px;padding:4px;margin-bottom:14px;
-  box-shadow:0 4px 14px rgba(42,30,22,.06);}
-.vt{flex:1;border:none;background:transparent;border-radius:999px;padding:10px;font-family:inherit;
-  font-size:14px;font-weight:700;color:var(--ink-soft);cursor:pointer;}
-.vt.on{background:var(--noren);color:#fff;}
+/* view toggle — 下線タブ */
+.viewtoggle{display:flex;gap:24px;border-bottom:1px solid var(--line);margin-bottom:16px;}
+.vt{border:none;background:none;font-family:inherit;font-size:14px;font-weight:700;
+  color:var(--ink-3);cursor:pointer;padding:0 0 12px;position:relative;letter-spacing:.5px;}
+.vt.on{color:var(--ink);}
+.vt.on::after{content:'';position:absolute;left:0;right:0;bottom:-1px;height:2px;background:var(--ink);}
 
 /* map */
-#map{display:none;height:62vh;border-radius:var(--radius);overflow:hidden;margin-bottom:14px;
-  box-shadow:0 6px 20px rgba(42,30,22,.1);z-index:0;}
+#map{display:none;height:62vh;border:1px solid var(--line);border-radius:4px;overflow:hidden;margin-bottom:16px;z-index:0;}
 .leaflet-popup-content{font-family:'Zen Kaku Gothic New',sans-serif;margin:10px 12px;}
 .pop-menu{font-size:14px;font-weight:900;color:var(--ink);}
-.pop-shop{font-size:11px;color:var(--ink-soft);margin-top:2px;}
-.pop-stars{font-size:12px;color:var(--broth);margin-top:3px;}
-.pop-edit{display:inline-block;margin-top:7px;font-size:11px;font-weight:700;color:var(--noren);cursor:pointer;}
-.mappin{width:34px;height:34px;border-radius:50% 50% 50% 0;background:#fff;border:2.5px solid var(--noren);
-  transform:rotate(-45deg);display:flex;align-items:center;justify-content:center;box-shadow:0 3px 8px rgba(0,0,0,.3);}
-.mappin span{transform:rotate(45deg);font-size:16px;}
+.pop-shop{font-size:11px;color:var(--ink-2);margin-top:2px;}
+.pop-stars{font-size:12px;color:var(--accent);margin-top:3px;letter-spacing:1px;}
+.pop-edit{display:inline-block;margin-top:7px;font-size:11px;font-weight:700;color:var(--ink);
+  text-decoration:underline;text-underline-offset:3px;cursor:pointer;}
+.mappin{width:22px;height:22px;border-radius:50% 50% 50% 0;background:var(--ink);
+  transform:rotate(-45deg);border:2px solid #fff;box-shadow:0 2px 5px rgba(0,0,0,.35);position:relative;}
+.mappin::after{content:'';position:absolute;top:6px;left:6px;width:6px;height:6px;border-radius:50%;background:#fff;}
 
-/* location capture */
-.loc-box{display:flex;gap:8px;}
-.loc-btn{flex:1;background:var(--card);border:1.5px solid var(--line);border-radius:12px;
-  padding:11px;font-family:inherit;font-size:13px;font-weight:700;color:var(--ink-soft);cursor:pointer;
-  display:flex;align-items:center;justify-content:center;gap:6px;}
-.loc-btn:active{transform:scale(.97);}
-.loc-status{font-size:12px;color:var(--negi);font-weight:700;margin-top:8px;display:none;}
-.loc-status.on{display:block;}
-
-/* filter */
-.filters{display:flex;gap:7px;overflow-x:auto;padding-bottom:4px;margin-bottom:14px;scrollbar-width:none;}
+/* filter — 角丸アウトライン / アクティブは墨ベタ(モノクロ) */
+.filters{display:flex;gap:8px;overflow-x:auto;padding-bottom:2px;margin-bottom:18px;scrollbar-width:none;}
 .filters::-webkit-scrollbar{display:none;}
-.fchip{flex-shrink:0;padding:7px 14px;border-radius:999px;font-size:12px;font-weight:700;cursor:pointer;
-  background:var(--card);color:var(--ink-soft);border:1.5px solid var(--line);}
-.fchip.on{background:var(--ink);color:#fff;border-color:var(--ink);}
+.fchip{flex-shrink:0;padding:6px 14px;border-radius:999px;font-size:12px;font-weight:700;cursor:pointer;
+  background:transparent;color:var(--ink-2);border:1px solid var(--line);}
+.fchip.on{background:var(--ink);color:var(--paper);border-color:var(--ink);}
 
-/* list */
+/* list — 影なし・薄い罫線・写真が主役 */
 .list{display:flex;flex-direction:column;gap:14px;}
-.card{background:var(--card);border-radius:var(--radius);overflow:hidden;cursor:pointer;
-  box-shadow:0 6px 20px rgba(42,30,22,.08);display:flex;transition:transform .12s;position:relative;}
-.card:active{transform:scale(.985);}
-.card-photo{width:108px;flex-shrink:0;background:linear-gradient(135deg,var(--broth-soft),var(--broth));
-  display:flex;align-items:center;justify-content:center;font-size:40px;object-fit:cover;}
-img.card-photo{object-fit:cover;}
-.card-body{flex:1;padding:13px 14px;min-width:0;}
-.card-shop{font-size:12px;color:var(--ink-soft);font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-.card-menu{font-size:16px;font-weight:900;color:var(--ink);margin-top:1px;line-height:1.3;
+.card{display:flex;background:var(--card);border:1px solid var(--line);border-radius:6px;
+  overflow:hidden;cursor:pointer;transition:border-color .15s;}
+.card:active{border-color:var(--ink-3);}
+.card-photo{width:96px;flex-shrink:0;align-self:stretch;object-fit:cover;min-height:104px;}
+.card-photo.ph{background:var(--line-2);display:flex;align-items:center;justify-content:center;}
+.card-photo.ph span{font-size:11px;color:var(--ink-3);font-weight:700;letter-spacing:1px;}
+.card-body{flex:1;padding:14px 16px;min-width:0;}
+.card-shop{font-size:11px;color:var(--ink-3);font-weight:600;letter-spacing:.5px;
   white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-.card-meta{display:flex;align-items:center;gap:8px;margin-top:7px;flex-wrap:wrap;}
-.tchip{font-size:10px;font-weight:700;padding:3px 9px;border-radius:999px;
-  background:rgba(62,124,89,.12);color:var(--noren);}
-.stars{font-size:13px;color:var(--broth);letter-spacing:1px;}
-.stars .off{color:#E3D6C2;}
-.card-foot{display:flex;align-items:center;justify-content:space-between;margin-top:8px;}
-.card-date{font-size:10.5px;color:var(--ink-faint);}
-.card-price{font-size:12px;font-weight:700;color:var(--ink-soft);}
+.card-menu{font-size:17px;font-weight:900;color:var(--ink);margin-top:2px;line-height:1.3;letter-spacing:.3px;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.card-meta{display:flex;align-items:center;gap:10px;margin-top:9px;}
+.tchip{font-size:10.5px;font-weight:700;color:var(--ink-2);border:1px solid var(--line);
+  padding:2px 8px;border-radius:5px;letter-spacing:.5px;}
+.stars{font-size:13px;color:var(--accent);letter-spacing:2px;}
+.stars .off{color:var(--line);}
+.card-foot{display:flex;align-items:center;justify-content:space-between;margin-top:11px;
+  padding-top:10px;border-top:1px solid var(--line-2);}
+.card-date{font-size:10.5px;color:var(--ink-3);letter-spacing:.5px;}
+.card-price{font-size:12px;font-weight:700;color:var(--ink-2);}
 
 /* empty */
-.empty{text-align:center;padding:70px 24px;color:var(--ink-faint);}
-.empty .e{font-size:64px;margin-bottom:14px;filter:grayscale(.2);}
-.empty .t{font-size:16px;font-weight:700;color:var(--ink-soft);}
-.empty .d{font-size:13px;margin-top:8px;line-height:1.7;}
+.empty{text-align:center;padding:90px 24px;color:var(--ink-3);}
+.empty .e{font-size:30px;font-weight:900;color:var(--line);letter-spacing:4px;margin-bottom:18px;}
+.empty .t{font-size:15px;font-weight:700;color:var(--ink-2);}
+.empty .d{font-size:13px;margin-top:10px;line-height:1.8;color:var(--ink-3);}
 
-/* FAB */
+/* FAB — 墨ベタの細身ピル */
 .fab{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(env(safe-area-inset-bottom) + 22px);
-  background:var(--noren);color:#fff;border:none;border-radius:999px;
-  padding:15px 30px;font-family:inherit;font-size:16px;font-weight:900;cursor:pointer;
-  box-shadow:0 10px 26px rgba(62,124,89,.38);display:flex;align-items:center;gap:8px;z-index:40;}
-.fab:active{transform:translateX(-50%) scale(.95);}
+  background:var(--ink);color:var(--paper);border:none;border-radius:999px;
+  padding:14px 26px;font-family:inherit;font-size:15px;font-weight:800;letter-spacing:1px;cursor:pointer;
+  box-shadow:0 6px 20px rgba(26,23,20,.22);z-index:40;}
+.fab:active{transform:translateX(-50%) scale(.96);}
 
 /* sheet */
-.mask{position:fixed;inset:0;background:rgba(42,30,22,.45);backdrop-filter:blur(2px);
-  opacity:0;visibility:hidden;transition:.28s;z-index:50;}
+.mask{position:fixed;inset:0;background:rgba(26,23,20,.4);opacity:0;visibility:hidden;transition:.26s;z-index:50;}
 .mask.on{opacity:1;visibility:visible;}
-.sheet{position:fixed;left:0;right:0;bottom:0;max-width:520px;margin:0 auto;
-  background:var(--bg);border-radius:26px 26px 0 0;z-index:51;
-  transform:translateY(100%);transition:transform .32s cubic-bezier(.16,1,.3,1);
-  max-height:92dvh;overflow-y:auto;padding:0 20px calc(env(safe-area-inset-bottom) + 24px);}
+.sheet{position:fixed;left:0;right:0;bottom:0;max-width:520px;margin:0 auto;background:var(--paper);
+  border-radius:18px 18px 0 0;z-index:51;transform:translateY(100%);
+  transition:transform .32s cubic-bezier(.16,1,.3,1);max-height:92dvh;overflow-y:auto;
+  padding:0 22px calc(env(safe-area-inset-bottom) + 24px);}
 .sheet.on{transform:none;}
-.grip{width:42px;height:5px;border-radius:3px;background:var(--line);margin:12px auto 8px;}
-.sheet-title{font-size:20px;font-weight:900;text-align:center;margin-bottom:18px;}
+.grip{width:36px;height:4px;border-radius:2px;background:var(--line);margin:12px auto 6px;}
+.sheet-title{font-size:18px;font-weight:900;letter-spacing:1px;margin:6px 0 22px;}
 
-/* photo picker */
-.photo-pick{width:100%;height:170px;border-radius:16px;border:2px dashed #CBD5C2;
-  background:rgba(62,124,89,.05);display:flex;align-items:center;justify-content:center;
-  overflow:hidden;position:relative;margin-bottom:18px;}
+/* photo picker — フラット */
+.photo-pick{width:100%;height:168px;border-radius:6px;border:1px dashed var(--line);
+  background:var(--line-2);display:flex;align-items:center;justify-content:center;
+  overflow:hidden;position:relative;margin-bottom:22px;}
 .photo-pick img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;}
 .pp-empty{display:flex;gap:12px;}
-.pp-opt{background:#fff;border:1.5px solid #CBD5C2;border-radius:14px;
-  padding:14px 20px;font-family:inherit;font-size:13px;font-weight:700;color:var(--noren);cursor:pointer;
-  display:flex;flex-direction:column;align-items:center;gap:6px;min-width:96px;}
-.pp-opt:active{transform:scale(.96);}
-.pp-ico{font-size:30px;}
-.photo-clear{position:absolute;top:8px;right:8px;background:rgba(0,0,0,.5);color:#fff;border:none;
-  width:28px;height:28px;border-radius:50%;font-size:16px;cursor:pointer;z-index:2;}
+.pp-opt{background:var(--paper);border:1px solid var(--line);border-radius:8px;
+  padding:14px 22px;font-family:inherit;font-size:13px;font-weight:700;color:var(--ink-2);cursor:pointer;
+  display:flex;flex-direction:column;align-items:center;gap:7px;min-width:96px;}
+.pp-opt:active{background:var(--line-2);}
+.pp-ico{font-size:24px;}
+.photo-clear{position:absolute;top:8px;right:8px;background:rgba(26,23,20,.6);color:#fff;border:none;
+  width:28px;height:28px;border-radius:50%;font-size:15px;cursor:pointer;z-index:2;}
 
-.field{margin-bottom:16px;}
-.field label{display:block;font-size:12px;font-weight:700;color:var(--ink-soft);margin-bottom:6px;}
+/* fields — アンダーライン入力 */
+.field{margin-bottom:20px;}
+.field label{display:block;font-size:10px;font-weight:700;color:var(--ink-3);
+  margin-bottom:8px;letter-spacing:1.5px;text-transform:uppercase;}
 .field input[type=text],.field input[type=number],.field textarea{
-  width:100%;background:var(--card);border:1.5px solid var(--line);border-radius:12px;
-  padding:12px 14px;font-family:inherit;font-size:15px;color:var(--ink);}
-.field input:focus,.field textarea:focus{outline:none;border-color:var(--broth);}
-.field textarea{resize:none;min-height:62px;}
-.row2{display:flex;gap:12px;}
+  width:100%;background:transparent;border:none;border-bottom:1.5px solid var(--line);
+  padding:6px 2px;font-family:inherit;font-size:16px;color:var(--ink);}
+.field input::placeholder,.field textarea::placeholder{color:var(--ink-3);}
+.field input:focus,.field textarea:focus{outline:none;border-bottom-color:var(--ink);}
+.field textarea{resize:none;min-height:48px;}
+.row2{display:flex;gap:16px;}
 .row2 .field{flex:1;}
 
-.type-grid{display:flex;flex-wrap:wrap;gap:8px;}
-.type-opt{padding:9px 14px;border-radius:999px;font-size:13px;font-weight:700;cursor:pointer;
-  background:var(--card);color:var(--ink-soft);border:1.5px solid var(--line);}
-.type-opt.on{background:var(--noren);color:#fff;border-color:var(--noren);}
+.loc-box{display:flex;gap:8px;}
+.loc-btn{flex:1;background:transparent;border:1px solid var(--line);border-radius:8px;
+  padding:11px;font-family:inherit;font-size:13px;font-weight:700;color:var(--ink-2);cursor:pointer;}
+.loc-btn:active{background:var(--line-2);}
+.loc-status{font-size:12px;color:var(--ink-2);font-weight:700;margin-top:10px;display:none;}
+.loc-status.on{display:block;}
 
-.star-pick{display:flex;gap:6px;}
-.star-pick span{font-size:34px;color:#E3D6C2;cursor:pointer;transition:transform .1s;}
-.star-pick span.on{color:var(--broth);}
+.type-grid{display:flex;flex-wrap:wrap;gap:8px;}
+.type-opt{padding:9px 15px;border-radius:999px;font-size:13px;font-weight:700;cursor:pointer;
+  background:transparent;color:var(--ink-2);border:1px solid var(--line);}
+.type-opt.on{background:var(--ink);color:var(--paper);border-color:var(--ink);}
+
+.star-pick{display:flex;gap:8px;}
+.star-pick span{font-size:32px;color:var(--line);cursor:pointer;transition:transform .1s;}
+.star-pick span.on{color:var(--accent);}
 .star-pick span:active{transform:scale(1.2);}
 
-.save-btn{width:100%;background:var(--noren);color:#fff;border:none;border-radius:14px;
-  padding:16px;font-family:inherit;font-size:17px;font-weight:900;cursor:pointer;margin-top:6px;
-  box-shadow:0 8px 20px rgba(62,124,89,.3);}
+.save-btn{width:100%;background:var(--ink);color:var(--paper);border:none;border-radius:10px;
+  padding:16px;font-family:inherit;font-size:16px;font-weight:800;letter-spacing:1px;cursor:pointer;margin-top:8px;}
 .save-btn:active{transform:scale(.98);}
-.del-btn{width:100%;background:transparent;color:var(--noren);border:none;
-  padding:14px;font-family:inherit;font-size:14px;font-weight:700;cursor:pointer;margin-top:10px;}
+.del-btn{width:100%;background:transparent;color:var(--ink-3);border:none;
+  padding:14px;font-family:inherit;font-size:13px;font-weight:700;cursor:pointer;margin-top:8px;
+  text-decoration:underline;text-underline-offset:3px;}
+
+/* backup */
+.bk-info{font-size:12px;color:var(--ink-2);line-height:1.8;border:1px solid var(--line);
+  border-radius:8px;padding:13px 15px;margin-bottom:18px;}
+.bk-btn{width:100%;border:1px solid var(--line);background:transparent;border-radius:10px;
+  padding:15px;font-family:inherit;font-size:14px;font-weight:700;color:var(--ink);cursor:pointer;
+  margin-bottom:10px;display:flex;align-items:center;gap:10px;justify-content:center;letter-spacing:.5px;}
+.bk-btn:active{background:var(--line-2);}
+.bk-btn .bi{font-size:16px;}
 
 #toast{position:fixed;left:50%;bottom:96px;transform:translateX(-50%) translateY(20px);
-  background:var(--ink);color:#fff;font-size:13px;font-weight:700;padding:11px 20px;border-radius:30px;
-  opacity:0;transition:.3s;z-index:99;pointer-events:none;}
+  background:var(--ink);color:var(--paper);font-size:13px;font-weight:700;padding:11px 20px;border-radius:8px;
+  opacity:0;transition:.3s;z-index:99;pointer-events:none;letter-spacing:.5px;}
 #toast.on{opacity:1;transform:translateX(-50%) translateY(0);}
 .hidden{display:none!important;}
 </style>
@@ -196,22 +188,22 @@ img.card-photo{object-fit:cover;}
 <div class="wrap">
   <div class="head">
     <div>
-      <div class="logo"><span class="logo-badge">麺</span><span class="logo-word">麺帳</span></div>
+      <div class="logo-word">麺帳</div>
       <div class="logo-sub">NOODLE JOURNAL</div>
     </div>
-    <button class="gear" id="gear" aria-label="バックアップ">⚙</button>
+    <button class="gear" id="gear" aria-label="データの管理">⚙</button>
   </div>
 
   <div class="stats">
     <div class="stat"><div class="v" id="st-count">0</div><div class="l">杯</div></div>
     <div class="stat"><div class="v" id="st-avg">–</div><div class="l">平均評価</div></div>
     <div class="stat"><div class="v" id="st-total">¥0</div><div class="l">合計</div></div>
-    <div class="stat"><div class="v" id="st-fav" style="font-size:13px">–</div><div class="l">推し</div></div>
+    <div class="stat"><div class="v" id="st-fav" style="font-size:14px">–</div><div class="l">推し</div></div>
   </div>
 
   <div class="viewtoggle">
-    <button class="vt on" id="vt-list" data-v="list">📋 リスト</button>
-    <button class="vt" id="vt-map" data-v="map">🗺️ マップ</button>
+    <button class="vt on" id="vt-list" data-v="list">リスト</button>
+    <button class="vt" id="vt-map" data-v="map">マップ</button>
   </div>
 
   <div class="filters" id="filters"></div>
@@ -220,7 +212,7 @@ img.card-photo{object-fit:cover;}
 
   <div class="list" id="list"></div>
   <div class="empty hidden" id="empty">
-    <div class="e">🍜</div>
+    <div class="e">麺帳</div>
     <div class="t">まだ記録がないよ</div>
     <div class="d">食べた麺を記録してみよう。<br>ラーメンもうどんもパスタも、まとめて残せます。</div>
   </div>
@@ -250,8 +242,8 @@ img.card-photo{object-fit:cover;}
   <div class="field">
     <label>場所（マップに表示）</label>
     <div class="loc-box">
-      <button type="button" class="loc-btn" id="locGeo">📍 現在地を取得</button>
-      <button type="button" class="loc-btn" id="locSearch">🔍 店名で探す</button>
+      <button type="button" class="loc-btn" id="locGeo">現在地を取得</button>
+      <button type="button" class="loc-btn" id="locSearch">店名で探す</button>
     </div>
     <div class="loc-status" id="locStatus"></div>
   </div>
@@ -288,11 +280,11 @@ img.card-photo{object-fit:cover;}
   <div class="grip"></div>
   <div class="sheet-title">データの管理</div>
   <div class="bk-info">
-    📱 記録は<b>この端末の中だけ</b>に保存されています。<br>
+    記録は<b>この端末の中だけ</b>に保存されています。<br>
     機種変更・ブラウザ削除に備えて、ときどきバックアップを書き出しておくと安心です。
   </div>
-  <button class="bk-btn" id="exportBtn"><span class="bi">⬆️</span> バックアップを書き出す</button>
-  <button class="bk-btn" id="importBtn"><span class="bi">⬇️</span> バックアップから復元する</button>
+  <button class="bk-btn" id="exportBtn"><span class="bi">⬆</span> バックアップを書き出す</button>
+  <button class="bk-btn" id="importBtn"><span class="bi">⬇</span> バックアップから復元する</button>
   <input type="file" accept="application/json,.json" id="importInput" class="hidden">
 </div>
 
@@ -305,7 +297,6 @@ img.card-photo{object-fit:cover;}
 const KEY='ramenLog.v1'
 const DATA_VERSION=1
 const TYPES=['ラーメン','つけ麺','うどん','そば','パスタ','焼きそば','担々麺','フォー','その他']
-const TYPE_EMOJI={'ラーメン':'🍜','つけ麺':'🥡','うどん':'🍲','そば':'🥢','パスタ':'🍝','焼きそば':'🍳','担々麺':'🌶️','フォー':'🍤','その他':'🍴'}
 
 let records=load()
 let filter='すべて'
@@ -337,7 +328,6 @@ function migrate(arr){
   }))
 }
 function save(){
-  // 新形式で保存 (バージョン付き)。配列としても読めるよう records に格納。
   localStorage.setItem(KEY,JSON.stringify({version:DATA_VERSION,records,savedAt:new Date().toISOString()}))
 }
 function uid(){return Date.now().toString(36)+Math.random().toString(36).slice(2,7)}
@@ -348,37 +338,33 @@ const $=id=>document.getElementById(id)
 function starHTML(n){let s='';for(let i=1;i<=5;i++)s+=`<span class="${i<=n?'':'off'}">★</span>`;return `<span class="stars">${s}</span>`}
 
 function render(){
-  // stats
   $('st-count').textContent=records.length
   const avg=records.length?(records.reduce((a,r)=>a+(r.stars||0),0)/records.length):0
   $('st-avg').innerHTML=records.length?avg.toFixed(1)+'<small>★</small>':'–'
   const total=records.reduce((a,r)=>a+(Number(r.price)||0),0)
   $('st-total').innerHTML='¥'+total.toLocaleString()
-  // fav type
   if(records.length){
     const c={};records.forEach(r=>{if(r.type)c[r.type]=(c[r.type]||0)+1})
     const fav=Object.entries(c).sort((a,b)=>b[1]-a[1])[0]
     $('st-fav').textContent=fav?fav[0]:'–'
   }else $('st-fav').textContent='–'
 
-  // filters
   const present=[...new Set(records.map(r=>r.type).filter(Boolean))]
   const fopts=['すべて',...present]
-  $('filters').innerHTML=fopts.map(f=>`<div class="fchip ${f===filter?'on':''}" data-f="${f}">${f==='すべて'?'すべて':TYPE_EMOJI[f]+' '+f}</div>`).join('')
+  $('filters').innerHTML=fopts.map(f=>`<div class="fchip ${f===filter?'on':''}" data-f="${f}">${f}</div>`).join('')
   $('filters').querySelectorAll('.fchip').forEach(el=>el.onclick=()=>{filter=el.dataset.f;render()})
 
-  // list
   const items=records.filter(r=>filter==='すべて'||r.type===filter)
   if(records.length===0){$('empty').classList.remove('hidden');$('list').innerHTML='';applyView();return}
   $('empty').classList.add('hidden')
   $('list').innerHTML=items.map(r=>`
     <div class="card" data-id="${r.id}">
-      ${r.photo?`<img class="card-photo" src="${r.photo}">`:`<div class="card-photo">${TYPE_EMOJI[r.type]||'🍜'}</div>`}
+      ${r.photo?`<img class="card-photo" src="${r.photo}">`:`<div class="card-photo ph"><span>${esc(r.type)||'麺'}</span></div>`}
       <div class="card-body">
         <div class="card-shop">${esc(r.shop)||'お店未設定'}</div>
         <div class="card-menu">${esc(r.menu)||'（無題）'}</div>
         <div class="card-meta">
-          ${r.type?`<span class="tchip">${TYPE_EMOJI[r.type]||''} ${r.type}</span>`:''}
+          ${r.type?`<span class="tchip">${esc(r.type)}</span>`:''}
           ${r.stars?starHTML(r.stars):''}
         </div>
         <div class="card-foot">
@@ -406,7 +392,7 @@ $('vt-map').onclick=()=>{view='map';applyView()}
 
 function ensureMap(){
   if(map) return
-  map=L.map('map',{zoomControl:true}).setView([26.2124,127.6809],11) // 那覇あたりを初期表示
+  map=L.map('map',{zoomControl:true}).setView([26.2124,127.6809],11)
   L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19,attribution:'© OpenStreetMap'}).addTo(map)
   markerLayer=L.layerGroup().addTo(map)
   map.on('popupopen',e=>{
@@ -420,7 +406,7 @@ function renderMap(){
   const items=records.filter(r=>r.lat!=null&&r.lng!=null).filter(r=>filter==='すべて'||r.type===filter)
   const pts=[]
   items.forEach(r=>{
-    const icon=L.divIcon({className:'',html:`<div class="mappin"><span>${TYPE_EMOJI[r.type]||'🍜'}</span></div>`,iconSize:[34,34],iconAnchor:[17,34],popupAnchor:[0,-32]})
+    const icon=L.divIcon({className:'',html:`<div class="mappin"></div>`,iconSize:[22,22],iconAnchor:[11,22],popupAnchor:[0,-22]})
     L.marker([r.lat,r.lng],{icon}).addTo(markerLayer).bindPopup(
       `<div class="pop-menu">${esc(r.menu)}</div>`+
       (r.shop?`<div class="pop-shop">${esc(r.shop)}</div>`:'')+
@@ -433,17 +419,14 @@ function renderMap(){
 }
 
 // ===== 種類グリッド =====
-$('typeGrid').innerHTML=TYPES.map(t=>`<div class="type-opt" data-t="${t}">${TYPE_EMOJI[t]} ${t}</div>`).join('')
+$('typeGrid').innerHTML=TYPES.map(t=>`<div class="type-opt" data-t="${t}">${t}</div>`).join('')
 $('typeGrid').querySelectorAll('.type-opt').forEach(el=>el.onclick=()=>{
   formType=el.dataset.t
   $('typeGrid').querySelectorAll('.type-opt').forEach(x=>x.classList.toggle('on',x.dataset.t===formType))
 })
 
 // ===== 星 =====
-$('starPick').querySelectorAll('span').forEach(el=>el.onclick=()=>{
-  formStars=+el.dataset.v
-  paintStars()
-})
+$('starPick').querySelectorAll('span').forEach(el=>el.onclick=()=>{formStars=+el.dataset.v;paintStars()})
 function paintStars(){$('starPick').querySelectorAll('span').forEach(s=>s.classList.toggle('on',+s.dataset.v<=formStars))}
 
 // ===== 写真 (撮影 or アルバムから / リサイズして保存) =====
@@ -475,7 +458,7 @@ function paintPhoto(){
   }else{
     pp.innerHTML=`<div class="pp-empty">
       <button type="button" class="pp-opt" id="ppCam"><span class="pp-ico">📷</span>撮影</button>
-      <button type="button" class="pp-opt" id="ppLib"><span class="pp-ico">🖼️</span>アルバム</button>
+      <button type="button" class="pp-opt" id="ppLib"><span class="pp-ico">🖼</span>アルバム</button>
     </div>`
     $('ppCam').onclick=()=>$('camInput').click()
     $('ppLib').onclick=()=>$('libInput').click()
@@ -514,7 +497,7 @@ function paintLoc(){
   const el=$('locStatus')
   if(formLat!=null&&formLng!=null){
     el.classList.add('on')
-    el.textContent='📍 場所を設定済み'+(formAddress?'：'+formAddress:`（${formLat.toFixed(4)}, ${formLng.toFixed(4)}）`)
+    el.textContent='✓ 場所を設定済み'+(formAddress?'：'+formAddress:`（${formLat.toFixed(4)}, ${formLng.toFixed(4)}）`)
   }else{el.classList.remove('on');el.textContent=''}
 }
 $('locGeo').onclick=()=>{
@@ -534,7 +517,7 @@ $('locSearch').onclick=async()=>{
     const j=await r.json()
     if(!j.length){toast('場所が見つからなかった');return}
     formLat=+j[0].lat;formLng=+j[0].lon;formAddress=(j[0].display_name||'').split(',').slice(0,3).join('、')
-    paintLoc();toast('場所を設定したよ 📍')
+    paintLoc();toast('場所を設定したよ')
   }catch(e){toast('検索に失敗した…')}
 }
 async function reverseGeocode(){
@@ -560,8 +543,8 @@ $('saveBtn').onclick=()=>{
     memo:$('f-memo').value.trim(), photo:formPhoto,
     lat:formLat, lng:formLng, address:formAddress,
   }
-  if(editId){records=records.map(r=>r.id===editId?rec:r);toast('更新したよ ✓')}
-  else{records.unshift(rec);toast('記録したよ 🍜')}
+  if(editId){records=records.map(r=>r.id===editId?rec:r);toast('更新したよ')}
+  else{records.unshift(rec);toast('記録したよ')}
   try{save()}catch(e){toast('保存容量オーバー（写真が大きすぎ）')}
   hideSheet();render()
 }
@@ -575,7 +558,6 @@ function todayStr(){const d=new Date();return `${d.getFullYear()}-${String(d.get
 // ===== バックアップ / 復元 =====
 $('gear').onclick=()=>{$('bkMask').classList.add('on');$('bkSheet').classList.add('on')}
 $('bkMask').onclick=()=>{$('bkMask').classList.remove('on');$('bkSheet').classList.remove('on')}
-
 $('exportBtn').onclick=()=>{
   const data={app:'mencho',version:DATA_VERSION,exportedAt:new Date().toISOString(),records}
   const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'})
@@ -583,9 +565,8 @@ $('exportBtn').onclick=()=>{
   const a=document.createElement('a')
   a.href=url;a.download=`ramen-log-backup-${todayStr()}.json`
   document.body.appendChild(a);a.click();a.remove();URL.revokeObjectURL(url)
-  toast('バックアップを書き出したよ 💾')
+  toast('バックアップを書き出したよ')
 }
-
 $('importBtn').onclick=()=>$('importInput').click()
 $('importInput').onchange=e=>{
   const file=e.target.files[0];if(!file)return
@@ -595,14 +576,13 @@ $('importInput').onchange=e=>{
       const parsed=JSON.parse(ev.target.result)
       const incoming=migrate(Array.isArray(parsed)?parsed:(parsed.records||[]))
       if(!incoming.length){toast('読み込めるデータが無かったよ');return}
-      // 既存とマージ (id が同じものは復元データで上書き、新規は追加。既存の他データは消さない)
       const byId={}
       records.forEach(r=>byId[r.id]=r)
       incoming.forEach(r=>byId[r.id]=r)
       records=Object.values(byId)
       save();render()
       $('bkMask').classList.remove('on');$('bkSheet').classList.remove('on')
-      toast(`${incoming.length}件を復元したよ ✓`)
+      toast(`${incoming.length}件を復元したよ`)
     }catch(err){toast('ファイルを読めなかった…')}
     finally{e.target.value=''}
   }
