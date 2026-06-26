@@ -293,7 +293,7 @@ body{font-family:'Zen Kaku Gothic New',sans-serif;color:var(--ink);background:va
 
   <div class="field">
     <label>タグ（用語）</label>
-    <div class="word-hint">タップで付ける ・ <a href="wiki.html" target="_blank" rel="noopener">辞典で意味を見る</a></div>
+    <div class="word-hint">ジャンルを選ぶと専用タグが増える ・ <a href="wiki.html" target="_blank" rel="noopener">辞典で意味を見る</a></div>
     <div class="word-chips" id="wordChips"></div>
   </div>
 
@@ -581,21 +581,33 @@ function makeSwipeable(sheet,onClose){
   })
 }
 
-// ===== スラング用語タグ (タップでトグル) =====
-const TAG_WORDS=['沼麺','スープ完飲','替玉案件','麺ロス','★5殿堂','リピ確','隠れ名店','無限すすり','二郎不可避','麺デビュー','コシ勢','スープ勢']
-$('wordChips').innerHTML=TAG_WORDS.map(w=>`<button type="button" class="wchip" data-w="${w}">${w}</button>`).join('')
-$('wordChips').querySelectorAll('.wchip').forEach(b=>b.onclick=()=>{
-  const w=b.dataset.w
-  formTags.has(w)?formTags.delete(w):formTags.add(w)
-  paintTags()
-})
-function paintTags(){$('wordChips').querySelectorAll('.wchip').forEach(b=>b.classList.toggle('on',formTags.has(b.dataset.w)))}
+// ===== スラング用語タグ (麺ジャンル別) =====
+const TAGS_COMMON=['沼麺','麺ロス','★5殿堂','リピ確','隠れ名店','麺デビュー','無限すすり','優勝']
+const TAGS_BY_GENRE={
+  'ラーメン':['替玉案件','スープ完飲','二郎不可避','背脂マシ','味玉必須','ニンニク入れますか'],
+  'つけ麺':['あつもり','割りスープ','麺リフト','濃厚ドロ系','締めの一滴'],
+  'うどん':['コシ命','釜玉至高','ぶっかけ日和','出汁すすり','つるしこ'],
+  'そば':['二八派','十割勢','そば湯まで','蕎麦前','ざる至上'],
+  'パスタ':['アルデンテ勢','追いチーズ','乳化の正義','ペペ基準','大盛り正義'],
+  '焼きそば':['鉄板の音','紅生姜マシ','ソース香','屋台の味','麺パリ勢'],
+  '担々麺':['痺れ追加','汁なし派','ゴマ濃厚','辛さマシ','花椒沼'],
+  'フォー':['パクチー増し','ライム搾り','朝フォー','あっさり優勝','エスニック開拓'],
+  'その他':[],
+}
+// 選択中ジャンルの専用タグ＋共通＋既選択 を表示
+function renderTagChips(){
+  const list=[...TAGS_COMMON, ...((formType&&TAGS_BY_GENRE[formType])||[])]
+  formTags.forEach(t=>{if(!list.includes(t))list.push(t)})
+  $('wordChips').innerHTML=list.map(w=>`<button type="button" class="wchip ${formTags.has(w)?'on':''}" data-w="${esc(w)}">${esc(w)}</button>`).join('')
+  $('wordChips').querySelectorAll('.wchip').forEach(b=>b.onclick=()=>{const w=b.dataset.w;formTags.has(w)?formTags.delete(w):formTags.add(w);renderTagChips()})
+}
 
 // ===== 種類グリッド =====
 $('typeGrid').innerHTML=TYPES.map(t=>`<div class="type-opt" data-t="${t}">${t}</div>`).join('')
 $('typeGrid').querySelectorAll('.type-opt').forEach(el=>el.onclick=()=>{
   formType=el.dataset.t
   $('typeGrid').querySelectorAll('.type-opt').forEach(x=>x.classList.toggle('on',x.dataset.t===formType))
+  renderTagChips() // ジャンルに応じて専用タグを出す
 })
 
 // ===== 星 =====
@@ -646,7 +658,7 @@ function openAdd(){
   $('f-menu').value='';$('f-shop').value='';$('f-price').value='';$('f-memo').value=''
   $('f-date').value=todayStr()
   $('typeGrid').querySelectorAll('.type-opt').forEach(x=>x.classList.remove('on'))
-  paintStars();resetPhotoUI();paintTags()
+  paintStars();resetPhotoUI();renderTagChips()
   $('delBtn').classList.add('hidden')
   $('saveBtn').textContent='記録する'
   showSheet()
@@ -663,7 +675,7 @@ async function openEdit(id){
   $('f-menu').value=r.menu||'';$('f-shop').value=r.shop||''
   $('f-price').value=r.price||'';$('f-memo').value=r.memo||'';$('f-date').value=r.date||todayStr()
   $('typeGrid').querySelectorAll('.type-opt').forEach(x=>x.classList.toggle('on',x.dataset.t===formType))
-  paintStars();paintPhoto();paintTags()
+  paintStars();paintPhoto();renderTagChips()
   $('delBtn').classList.remove('hidden')
   $('saveBtn').textContent='更新する'
   showSheet()
