@@ -51,8 +51,13 @@ body{font-family:'Zen Kaku Gothic New',sans-serif;color:var(--ink);background:va
 
 /* list — 影なし・薄い罫線・写真が主役 */
 .list{display:flex;flex-direction:column;gap:14px;}
+.list-hint{font-size:11px;color:var(--ink-3);text-align:center;margin-bottom:12px;letter-spacing:.5px;}
+.card-wrap{position:relative;border-radius:6px;overflow:hidden;}
+.card-del{position:absolute;inset:0;display:flex;align-items:center;justify-content:flex-end;
+  padding-right:22px;background:#C0392B;color:#fff;font-weight:800;font-size:14px;letter-spacing:1px;}
 .card{display:flex;background:var(--card);border:1px solid var(--line);border-radius:6px;
-  overflow:hidden;cursor:pointer;transition:border-color .15s;}
+  overflow:hidden;cursor:pointer;position:relative;touch-action:pan-y;
+  transition:transform .16s ease, opacity .16s ease, border-color .15s;}
 .card:active{border-color:var(--ink-3);}
 .card-photo{width:96px;flex-shrink:0;align-self:stretch;object-fit:cover;min-height:104px;}
 .card-photo.ph{background:var(--line-2);display:flex;align-items:center;justify-content:center;}
@@ -310,25 +315,81 @@ function render(){
   const items=records.filter(r=>filter==='すべて'||r.type===filter)
   if(records.length===0){$('empty').classList.remove('hidden');$('list').innerHTML='';return}
   $('empty').classList.add('hidden')
-  $('list').innerHTML=items.map(r=>`
-    <div class="card" data-id="${r.id}">
-      ${r.photo?`<img class="card-photo" src="${r.photo}">`:`<div class="card-photo ph"><span>${esc(r.type)||'麺'}</span></div>`}
-      <div class="card-body">
-        <div class="card-shop">${esc(r.shop)||'お店未設定'}</div>
-        <div class="card-menu">${esc(r.menu)||'（無題）'}</div>
-        <div class="card-meta">
-          ${r.type?`<span class="tchip">${esc(r.type)}</span>`:''}
-          ${r.stars?starHTML(r.stars):''}
-        </div>
-        <div class="card-foot">
-          <span class="card-date">${r.date||''}</span>
-          ${r.price?`<span class="card-price">¥${Number(r.price).toLocaleString()}</span>`:''}
+  $('list').innerHTML='<div class="list-hint">タップで編集 ・ 左スワイプで削除</div>'+items.map(r=>`
+    <div class="card-wrap">
+      <div class="card-del">削除</div>
+      <div class="card" data-id="${r.id}">
+        ${r.photo?`<img class="card-photo" src="${r.photo}">`:`<div class="card-photo ph"><span>${esc(r.type)||'麺'}</span></div>`}
+        <div class="card-body">
+          <div class="card-shop">${esc(r.shop)||'お店未設定'}</div>
+          <div class="card-menu">${esc(r.menu)||'（無題）'}</div>
+          <div class="card-meta">
+            ${r.type?`<span class="tchip">${esc(r.type)}</span>`:''}
+            ${r.stars?starHTML(r.stars):''}
+          </div>
+          <div class="card-foot">
+            <span class="card-date">${r.date||''}</span>
+            ${r.price?`<span class="card-price">¥${Number(r.price).toLocaleString()}</span>`:''}
+          </div>
         </div>
       </div>
     </div>`).join('')
-  $('list').querySelectorAll('.card').forEach(el=>el.onclick=()=>openEdit(el.dataset.id))
+  $('list').querySelectorAll('.card').forEach(attachCard)
 }
 function esc(s){return (s||'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]))}
+
+// ===== ジェスチャー操作 =====
+// カード: タップ=編集 / 左スワイプ=削除
+function attachCard(el){
+  const id=el.dataset.id
+  let sx=0,sy=0,dx=0,hor=false,swiped=false
+  el.addEventListener('touchstart',e=>{
+    sx=e.touches[0].clientX;sy=e.touches[0].clientY;dx=0;hor=false;swiped=false
+    el.style.transition='none'
+  },{passive:true})
+  el.addEventListener('touchmove',e=>{
+    const mx=e.touches[0].clientX-sx,my=e.touches[0].clientY-sy
+    if(!hor && Math.abs(mx)>Math.abs(my)+8) hor=true
+    if(hor){
+      e.preventDefault()
+      dx=Math.min(0,mx)
+      el.style.transform=`translateX(${dx}px)`
+      el.style.opacity=String(Math.max(.4,1+dx/260))
+    }
+  },{passive:false})
+  el.addEventListener('touchend',()=>{
+    el.style.transition=''
+    if(hor && dx<-110){
+      swiped=true
+      el.style.transform='translateX(-100%)';el.style.opacity='0'
+      setTimeout(()=>deleteRecord(id),170)
+    }else{ el.style.transform='';el.style.opacity='' }
+  })
+  el.addEventListener('click',()=>{ if(swiped||hor){return} openEdit(id) })
+}
+function deleteRecord(id){
+  records=records.filter(r=>r.id!==id);save();render();toast('削除したよ')
+}
+
+// シート: 下スワイプで閉じる
+function makeSwipeable(sheet,onClose){
+  let startY=0,cur=0,drag=false
+  sheet.addEventListener('touchstart',e=>{
+    if(sheet.scrollTop>2){drag=false;return}
+    startY=e.touches[0].clientY;cur=0;drag=true;sheet.style.transition='none'
+  },{passive:true})
+  sheet.addEventListener('touchmove',e=>{
+    if(!drag)return
+    cur=e.touches[0].clientY-startY
+    if(cur>0){sheet.style.transform=`translateY(${cur}px)`}
+  },{passive:true})
+  sheet.addEventListener('touchend',()=>{
+    if(!drag)return
+    drag=false;sheet.style.transition=''
+    sheet.style.transform=''
+    if(cur>100)onClose()
+  })
+}
 
 // ===== 種類グリッド =====
 $('typeGrid').innerHTML=TYPES.map(t=>`<div class="type-opt" data-t="${t}">${t}</div>`).join('')
@@ -433,8 +494,9 @@ $('delBtn').onclick=()=>{
 function todayStr(){const d=new Date();return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`}
 
 // ===== バックアップ / 復元 =====
+function hideBackup(){$('bkMask').classList.remove('on');$('bkSheet').classList.remove('on')}
 $('gear').onclick=()=>{$('bkMask').classList.add('on');$('bkSheet').classList.add('on')}
-$('bkMask').onclick=()=>{$('bkMask').classList.remove('on');$('bkSheet').classList.remove('on')}
+$('bkMask').onclick=hideBackup
 $('exportBtn').onclick=()=>{
   const data={app:'mencho',version:DATA_VERSION,exportedAt:new Date().toISOString(),records}
   const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'})
@@ -468,6 +530,10 @@ $('importInput').onchange=e=>{
 
 let tT=null
 function toast(m){const t=$('toast');t.textContent=m;t.classList.add('on');clearTimeout(tT);tT=setTimeout(()=>t.classList.remove('on'),1800)}
+
+// シートを下スワイプで閉じられるように
+makeSwipeable($('sheet'),hideSheet)
+makeSwipeable($('bkSheet'),hideBackup)
 
 render()
 </script>
