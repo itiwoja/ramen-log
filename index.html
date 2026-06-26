@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no">
-<meta name="theme-color" content="#FAF9F6">
+<meta name="theme-color" content="#FFFFFF">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <title>麺帳 — 麺類の記録</title>
@@ -13,12 +13,11 @@
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
 :root{
-  /* ほぼモノクロ: 色は料理写真に任せる。UIは紙×墨×罫線＋差し色1色のみ */
-  --paper:#FAF9F6;
-  --ink:#1A1714;--ink-2:#605C54;--ink-3:#A6A096;
-  --line:#E7E3DA;--line-2:#EFECE4;
+  /* 白と黒だけ。色は料理写真に任せる */
+  --paper:#FFFFFF;
+  --ink:#0B0B0B;--ink-2:#555555;--ink-3:#9A9A9A;
+  --line:#E6E6E6;--line-2:#F2F2F2;
   --card:#FFFFFF;
-  --accent:#C8761E;   /* 差し色は評価★とアクティブのみ */
 }
 html,body{height:100%;}
 body{font-family:'Zen Kaku Gothic New',sans-serif;color:var(--ink);background:var(--paper);
@@ -54,7 +53,7 @@ body{font-family:'Zen Kaku Gothic New',sans-serif;color:var(--ink);background:va
 .list-hint{font-size:11px;color:var(--ink-3);text-align:center;margin-bottom:12px;letter-spacing:.5px;}
 .card-wrap{position:relative;border-radius:6px;overflow:hidden;}
 .card-del{position:absolute;inset:0;display:flex;align-items:center;justify-content:flex-end;
-  padding-right:22px;background:#C0392B;color:#fff;font-weight:800;font-size:14px;letter-spacing:1px;}
+  padding-right:22px;background:var(--ink);color:#fff;font-weight:800;font-size:14px;letter-spacing:1px;}
 .card{display:flex;background:var(--card);border:1px solid var(--line);border-radius:6px;
   overflow:hidden;cursor:pointer;position:relative;touch-action:pan-y;
   transition:transform .16s ease, opacity .16s ease, border-color .15s;}
@@ -70,7 +69,7 @@ body{font-family:'Zen Kaku Gothic New',sans-serif;color:var(--ink);background:va
 .card-meta{display:flex;align-items:center;gap:10px;margin-top:9px;}
 .tchip{font-size:10.5px;font-weight:700;color:var(--ink-2);border:1px solid var(--line);
   padding:2px 8px;border-radius:5px;letter-spacing:.5px;}
-.stars{font-size:13px;color:var(--accent);letter-spacing:2px;}
+.stars{font-size:13px;color:var(--ink);letter-spacing:2px;}
 .stars .off{color:var(--line);}
 .card-foot{display:flex;align-items:center;justify-content:space-between;margin-top:11px;
   padding-top:10px;border-top:1px solid var(--line-2);}
@@ -135,7 +134,7 @@ body{font-family:'Zen Kaku Gothic New',sans-serif;color:var(--ink);background:va
 
 .star-pick{display:flex;gap:8px;}
 .star-pick span{font-size:32px;color:var(--line);cursor:pointer;transition:transform .1s;}
-.star-pick span.on{color:var(--accent);}
+.star-pick span.on{color:var(--ink);}
 .star-pick span:active{transform:scale(1.2);}
 
 .save-btn{width:100%;background:var(--ink);color:var(--paper);border:none;border-radius:10px;
