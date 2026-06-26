@@ -29,6 +29,7 @@ body{font-family:'Zen Kaku Gothic New',sans-serif;color:var(--ink);background:va
 .scorebar i{display:block;height:100%;background:var(--ink);}
 .group-h{font-size:12px;font-weight:800;letter-spacing:1.5px;color:var(--paper);background:var(--ink);
   display:inline-block;padding:4px 11px;border-radius:5px;margin:28px 0 8px;}
+.group-h .grp-n{font-weight:700;opacity:.7;margin-left:4px;}
 .tr{display:flex;align-items:center;gap:13px;padding:13px 0;border-bottom:1px solid var(--line);}
 .tr:last-child{border-bottom:none;}
 .tr-badge{width:40px;height:40px;flex-shrink:0;border-radius:10px;display:flex;align-items:center;
@@ -68,15 +69,8 @@ const earnedN=ach.filter(a=>a.earned).length
 $('score').textContent=`${earnedN} / ${ach.length} 獲得`
 $('scorebar').style.width=ach.length?Math.round(earnedN/ach.length*100)+'%':'0%'
 
-// グループ順: 総合 → ジャンル。獲得済みを上に。
-const groups=['総合','ジャンル']
-let html=''
-groups.forEach(g=>{
-  const items=ach.filter(a=>a.group===g).sort((a,b)=>(b.earned-a.earned))
-  if(!items.length)return
-  html+=`<div class="group-h">${esc(g)}</div>`
-  html+=items.map(a=>`
-    <div class="tr ${a.earned?'on':''}">
+function trItem(a){
+  return `<div class="tr ${a.earned?'on':''}">
       <div class="tr-badge">${a.earned?'✓':'🔒'}</div>
       <div class="tr-body">
         <div class="tr-title">${esc(a.title)}</div>
@@ -84,8 +78,17 @@ groups.forEach(g=>{
         <div class="tr-prog"><i style="width:${Math.round(a.pct*100)}%"></i></div>
       </div>
       <div class="tr-have">${a.earned?'獲得':a.have+'/'+a.target}</div>
-    </div>`).join('')
-})
+    </div>`
+}
+function section(title,items){
+  if(!items.length) return ''
+  const e=items.filter(a=>a.earned).length
+  return `<div class="group-h">${esc(title)} <span class="grp-n">${e}/${items.length}</span></div>`+items.map(trItem).join('')
+}
+// 総合 → 麺類ごと（各セクションに デビュー/マニア/極み）
+const genres=(window.MENCHO_GENRES||[])
+let html=section('総合', ach.filter(a=>a.group==='総合'))
+genres.forEach(g=>{ html+=section(g, ach.filter(a=>a.id.split(':')[1]===g)) })
 // 記録が無くても全トロフィーを一覧表示（目標を眺められる）
 $('list').innerHTML = (records.length?'':'<div class="empty-note">まだ記録なし。これが集めるトロフィー一覧 ✦</div>') + html
 if('serviceWorker' in navigator){addEventListener('load',()=>navigator.serviceWorker.register('sw.js').catch(()=>{}))}
