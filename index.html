@@ -194,6 +194,7 @@ body{font-family:'Zen Kaku Gothic New',sans-serif;color:var(--ink);background:va
   text-decoration:underline;text-underline-offset:3px;}
 
 /* backup */
+.store-status{margin-top:10px;font-size:11px;font-weight:700;color:var(--ink);}
 .bk-info{font-size:12px;color:var(--ink-2);line-height:1.8;border:1px solid var(--line);
   border-radius:8px;padding:13px 15px;margin-bottom:18px;}
 .bk-btn{width:100%;border:1px solid var(--line);background:transparent;border-radius:10px;
@@ -351,6 +352,7 @@ body{font-family:'Zen Kaku Gothic New',sans-serif;color:var(--ink);background:va
   <div class="bk-info">
     記録は<b>この端末の中だけ</b>に保存されています。<br>
     機種変更・ブラウザ削除に備えて、ときどきバックアップを書き出しておくと安心です。
+    <div id="storeStatus" class="store-status"></div>
   </div>
   <button class="bk-btn" id="exportBtn"><span class="bi">⬆</span> バックアップを書き出す</button>
   <button class="bk-btn" id="importBtn"><span class="bi">⬇</span> バックアップから復元する</button>
@@ -892,7 +894,16 @@ function todayStr(){const d=new Date();return `${d.getFullYear()}-${String(d.get
 
 // ===== バックアップ / 復元 =====
 function hideBackup(){$('bkMask').classList.remove('on');$('bkSheet').classList.remove('on')}
-$('gear').onclick=()=>{$('bkMask').classList.add('on');$('bkSheet').classList.add('on')}
+async function showStoreStatus(){
+  const el=$('storeStatus');if(!el)return
+  try{
+    const p=navigator.storage&&navigator.storage.persisted?await navigator.storage.persisted():false
+    let usage=''
+    if(navigator.storage&&navigator.storage.estimate){const e=await navigator.storage.estimate();if(e.usage)usage=` ・ 使用 ${(e.usage/1048576).toFixed(1)}MB`}
+    el.textContent=(p?'🔒 永続保存：有効':'⚠ 永続保存：未許可（端末容量不足時に消える可能性）')+usage
+  }catch(e){el.textContent=''}
+}
+$('gear').onclick=()=>{$('bkMask').classList.add('on');$('bkSheet').classList.add('on');showStoreStatus()}
 $('bkMask').onclick=hideBackup
 $('exportBtn').onclick=async()=>{
   toast('バックアップ作成中…')
@@ -969,6 +980,11 @@ if(localStorage.getItem(TROPHY_KEY)===null && window.computeAchievements){
 
 // オフライン対応 (Service Worker)
 if('serviceWorker' in navigator){addEventListener('load',()=>navigator.serviceWorker.register('sw.js').catch(()=>{}))}
+
+// 永続ストレージを要求（容量不足での自動退避を防ぎ、写真を消えにくくする）
+if(navigator.storage && navigator.storage.persist){
+  navigator.storage.persisted().then(p=>{ if(!p) navigator.storage.persist().catch(()=>{}) }).catch(()=>{})
+}
 </script>
 </body>
 </html>
