@@ -153,6 +153,32 @@ body{font-family:'Zen Kaku Gothic New',sans-serif;color:var(--ink);background:va
 .bk-btn:active{background:var(--line-2);}
 .bk-btn .bi{font-size:16px;}
 
+/* toolbar: 検索 + 並び替え */
+.toolbar{display:flex;gap:8px;margin-bottom:14px;}
+.search{flex:1;min-width:0;background:transparent;border:1px solid var(--line);border-radius:8px;
+  padding:9px 13px;font-family:inherit;font-size:14px;color:var(--ink);}
+.search::placeholder{color:var(--ink-3);}
+.search:focus{outline:none;border-color:var(--ink);}
+.sort{flex-shrink:0;border:1px solid var(--line);border-radius:8px;background:transparent;
+  padding:0 8px;font-family:inherit;font-size:13px;font-weight:700;color:var(--ink-2);}
+
+/* 詳細シート */
+.d-photo{width:100%;height:220px;border-radius:8px;overflow:hidden;background:var(--line-2);
+  display:flex;align-items:center;justify-content:center;margin-bottom:18px;}
+.d-photo img{width:100%;height:100%;object-fit:cover;}
+.d-photo .ph{font-size:13px;color:var(--ink-3);font-weight:700;letter-spacing:1px;}
+.d-shop{font-size:12px;color:var(--ink-3);font-weight:600;letter-spacing:.5px;}
+.d-menu{font-size:24px;font-weight:900;color:var(--ink);margin-top:3px;line-height:1.3;}
+.d-meta{display:flex;align-items:center;gap:10px;margin-top:13px;}
+.d-sub{font-size:13px;color:var(--ink-2);margin-top:13px;font-weight:600;}
+.d-memo{font-size:15px;color:var(--ink);line-height:1.9;margin-top:18px;
+  padding-top:18px;border-top:1px solid var(--line);white-space:pre-wrap;}
+.d-actions{display:flex;gap:10px;margin-top:24px;}
+.d-edit{flex:1;background:var(--ink);color:var(--paper);border:none;border-radius:10px;
+  padding:15px;font-family:inherit;font-size:15px;font-weight:800;letter-spacing:1px;cursor:pointer;}
+.d-del2{flex-shrink:0;padding:15px 18px;background:transparent;color:var(--ink-2);
+  border:1px solid var(--line);border-radius:10px;font-family:inherit;font-size:14px;font-weight:700;cursor:pointer;}
+
 #toast{position:fixed;left:50%;bottom:96px;transform:translateX(-50%) translateY(20px);
   background:var(--ink);color:var(--paper);font-size:13px;font-weight:700;padding:11px 20px;border-radius:8px;
   opacity:0;transition:.3s;z-index:99;pointer-events:none;letter-spacing:.5px;}
@@ -174,6 +200,17 @@ body{font-family:'Zen Kaku Gothic New',sans-serif;color:var(--ink);background:va
     <div class="stat"><div class="v" id="st-avg">–</div><div class="l">平均評価</div></div>
     <div class="stat"><div class="v" id="st-total">¥0</div><div class="l">合計</div></div>
     <div class="stat"><div class="v" id="st-fav" style="font-size:14px">–</div><div class="l">推し</div></div>
+  </div>
+
+  <div class="toolbar">
+    <input class="search" id="search" type="text" placeholder="検索（メニュー・お店）" autocomplete="off">
+    <select class="sort" id="sort">
+      <option value="new">新しい順</option>
+      <option value="old">古い順</option>
+      <option value="star">評価が高い順</option>
+      <option value="priceHigh">高い順</option>
+      <option value="priceLow">安い順</option>
+    </select>
   </div>
 
   <div class="filters" id="filters"></div>
@@ -221,7 +258,7 @@ body{font-family:'Zen Kaku Gothic New',sans-serif;color:var(--ink);background:va
 
   <div class="row2">
     <div class="field"><label>価格</label><input type="number" id="f-price" placeholder="900" inputmode="numeric"></div>
-    <div class="field"><label>日付</label><input type="text" id="f-date" placeholder="2026-06-25"></div>
+    <div class="field"><label>日付</label><input type="date" id="f-date"></div>
   </div>
 
   <div class="field">
@@ -247,6 +284,13 @@ body{font-family:'Zen Kaku Gothic New',sans-serif;color:var(--ink);background:va
   <input type="file" accept="application/json,.json" id="importInput" class="hidden">
 </div>
 
+<!-- 詳細シート -->
+<div class="mask" id="dMask"></div>
+<div class="sheet" id="dSheet">
+  <div class="grip"></div>
+  <div id="dContent"></div>
+</div>
+
 <div id="toast"></div>
 
 <script>
@@ -259,6 +303,7 @@ const TYPES=['ラーメン','つけ麺','うどん','そば','パスタ','焼き
 
 let records=load()
 let filter='すべて'
+let query='',sortBy='new'
 let editId=null
 let formPhoto=null
 let formType=null
@@ -311,10 +356,13 @@ function render(){
   $('filters').innerHTML=fopts.map(f=>`<div class="fchip ${f===filter?'on':''}" data-f="${f}">${f}</div>`).join('')
   $('filters').querySelectorAll('.fchip').forEach(el=>el.onclick=()=>{filter=el.dataset.f;render()})
 
-  const items=records.filter(r=>filter==='すべて'||r.type===filter)
+  let items=records.filter(r=>filter==='すべて'||r.type===filter)
+  if(query){const q=query.toLowerCase();items=items.filter(r=>`${r.menu||''} ${r.shop||''} ${r.memo||''}`.toLowerCase().includes(q))}
+  items=sortItems(items)
   if(records.length===0){$('empty').classList.remove('hidden');$('list').innerHTML='';return}
   $('empty').classList.add('hidden')
-  $('list').innerHTML='<div class="list-hint">タップで編集 ・ 左スワイプで削除</div>'+items.map(r=>`
+  if(items.length===0){$('list').innerHTML='<div class="list-hint">該当する記録がないよ</div>';return}
+  $('list').innerHTML='<div class="list-hint">タップで詳細 ・ 左スワイプで削除</div>'+items.map(r=>`
     <div class="card-wrap">
       <div class="card-del">削除</div>
       <div class="card" data-id="${r.id}">
@@ -336,6 +384,41 @@ function render(){
   $('list').querySelectorAll('.card').forEach(attachCard)
 }
 function esc(s){return (s||'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]))}
+
+function sortItems(arr){
+  const a=[...arr]
+  switch(sortBy){
+    case 'old':       a.sort((x,y)=>(x.date||'').localeCompare(y.date||''));break
+    case 'star':      a.sort((x,y)=>(y.stars||0)-(x.stars||0));break
+    case 'priceHigh': a.sort((x,y)=>(Number(y.price)||0)-(Number(x.price)||0));break
+    case 'priceLow':  a.sort((x,y)=>(Number(x.price)||0)-(Number(y.price)||0));break
+    default:          a.sort((x,y)=>(y.date||'').localeCompare(x.date||'')) // new
+  }
+  return a
+}
+$('search').oninput=e=>{query=e.target.value.trim();render()}
+$('sort').onchange=e=>{sortBy=e.target.value;render()}
+
+// ===== 詳細表示 (メモも表示) =====
+function openDetail(id){
+  const r=records.find(x=>x.id===id);if(!r)return
+  $('dContent').innerHTML=`
+    <div class="d-photo">${r.photo?`<img src="${r.photo}">`:`<span class="ph">${esc(r.type)||'麺'}</span>`}</div>
+    <div class="d-shop">${esc(r.shop)||'お店未設定'}</div>
+    <div class="d-menu">${esc(r.menu)||'（無題）'}</div>
+    <div class="d-meta">${r.type?`<span class="tchip">${esc(r.type)}</span>`:''}${r.stars?starHTML(r.stars):''}</div>
+    <div class="d-sub">${r.date||''}${r.price?' ・ ¥'+Number(r.price).toLocaleString():''}</div>
+    ${r.memo?`<div class="d-memo">${esc(r.memo)}</div>`:''}
+    <div class="d-actions">
+      <button class="d-del2" id="dDel">削除</button>
+      <button class="d-edit" id="dEdit">編集する</button>
+    </div>`
+  $('dEdit').onclick=()=>{hideDetail();openEdit(id)}
+  $('dDel').onclick=()=>{hideDetail();deleteRecord(id)}
+  $('dMask').classList.add('on');$('dSheet').classList.add('on')
+}
+function hideDetail(){$('dMask').classList.remove('on');$('dSheet').classList.remove('on')}
+$('dMask').onclick=hideDetail
 
 // ===== ジェスチャー操作 =====
 // カード: タップ=編集 / 左スワイプ=削除
@@ -364,7 +447,7 @@ function attachCard(el){
       setTimeout(()=>deleteRecord(id),170)
     }else{ el.style.transform='';el.style.opacity='' }
   })
-  el.addEventListener('click',()=>{ if(swiped||hor){return} openEdit(id) })
+  el.addEventListener('click',()=>{ if(swiped||hor){return} openDetail(id) })
 }
 function deleteRecord(id){
   records=records.filter(r=>r.id!==id);save();render();toast('削除したよ')
@@ -533,6 +616,7 @@ function toast(m){const t=$('toast');t.textContent=m;t.classList.add('on');clear
 // シートを下スワイプで閉じられるように
 makeSwipeable($('sheet'),hideSheet)
 makeSwipeable($('bkSheet'),hideBackup)
+makeSwipeable($('dSheet'),hideDetail)
 
 render()
 </script>
