@@ -225,6 +225,7 @@ input,textarea,select,[contenteditable]{-webkit-user-select:text;user-select:tex
 /* モーダル/ビューア表示中は背景をロック（スワイプ貫通防止） */
 html:has(.mask.on),body:has(.mask.on),html:has(#viewer.on),body:has(#viewer.on){overflow:hidden;}
 .sheet{overscroll-behavior:contain;}
+.mask{touch-action:none;overscroll-behavior:none;} /* 暗幕もスクロール不可 */
 </style>
 </head>
 <body>
