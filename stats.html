@@ -272,7 +272,7 @@ async function idbGet(id){try{const db=await idbOpen();return await new Promise(
 async function fillPhotos(root){
   for(const el of root.querySelectorAll('[data-pid]')){
     const b=await idbGet(el.dataset.pid)
-    if(b){const u=URL.createObjectURL(b);el.innerHTML=`<img src="${u}">`}
+    if(b){const u=URL.createObjectURL(b);const img=document.createElement('img');img.src=u;el.replaceChildren(img)}
   }
 }
 
