@@ -3,66 +3,182 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no">
-<meta name="theme-color" content="#FFFFFF">
+<meta name="theme-color" content="#F2F2F7" media="(prefers-color-scheme:light)">
+<meta name="theme-color" content="#000000" media="(prefers-color-scheme:dark)">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="apple-touch-icon" href="icon.svg">
 <link rel="icon" href="icon.svg">
 <title>麺帳 トロフィー</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Yomogi&family=Zen+Maru+Gothic:wght@400;500;700;900&display=swap" rel="stylesheet">
 <script src="achievements.js"></script>
 <style>
+/* ============================================================
+   麺帳 トロフィー — Apple HIG (iOS) reskin
+   Clarity / Deference / Depth。UIは控えめ・コンテンツ主役。
+   セマンティック色トークン（Light/Dark）は index.html と同一。
+   tint = 醤油の琥珀。獲得=tint・未獲得=淡色。
+   JS・id・class・データキー（ramenLog.v1）は一切変更していない。
+   見た目層（style と最小マークアップ）のみ作り替え。
+   ============================================================ */
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
-:root{--paper:#F4F0E6;--ink:#2B2823;--ink-2:#6B645A;--ink-3:#A89E8C;--line:#E3DBCB;--line-2:#EEE8DA;--card:#FFFFFF;--tape1:#E3A53C;--tape2:#5BA597;--tape3:#D9756A;--tape4:#9A8BC2;}
-html,body{height:100%;}
-body{font-family:'Zen Maru Gothic','Klee One',sans-serif;color:var(--ink);background-color:var(--paper);background-image:radial-gradient(rgba(43,40,35,.06) 1.2px,transparent 1.2px);background-size:20px 20px;
-  min-height:100dvh;-webkit-font-smoothing:antialiased;}
-.wrap{max-width:560px;margin:0 auto;padding:calc(env(safe-area-inset-top) + 14px) 20px 80px;}
-.back{display:inline-flex;align-items:center;gap:6px;font-size:13px;font-weight:700;color:var(--ink-2);
-  text-decoration:none;margin-bottom:18px;}
-.title{font-size:26px;font-weight:900;letter-spacing:2px;}
-.score{font-size:13px;color:var(--ink-3);margin-top:6px;font-weight:700;letter-spacing:.5px;}
-.scorebar{height:8px;border-radius:4px;background:var(--line-2);overflow:hidden;margin:12px 0 4px;}
-.scorebar i{display:block;height:100%;background:var(--ink);}
-.group-h{font-size:12px;font-weight:800;letter-spacing:1.5px;color:var(--paper);background:var(--ink);
-  display:inline-block;padding:4px 11px;border-radius:5px;margin:28px 0 8px;}
-.group-h .grp-n{font-weight:700;opacity:.7;margin-left:4px;}
-.tr{display:flex;align-items:center;gap:13px;padding:13px 0;border-bottom:1px solid var(--line);}
-.tr:last-child{border-bottom:none;}
-.tr-badge{width:40px;height:40px;flex-shrink:0;border-radius:10px;display:flex;align-items:center;
-  justify-content:center;font-size:18px;font-weight:900;border:1.5px solid var(--line);color:var(--ink-3);}
-.tr.on .tr-badge{background:var(--ink);color:var(--paper);border-color:var(--ink);}
-.tr-body{flex:1;min-width:0;}
-.tr-title{font-size:15px;font-weight:800;color:var(--ink-3);}
-.tr.on .tr-title{color:var(--ink);}
-.tr-desc{font-size:11px;color:var(--ink-3);margin-top:1px;}
-.tr-prog{height:5px;border-radius:3px;background:var(--line-2);overflow:hidden;margin-top:7px;}
-.tr-prog i{display:block;height:100%;background:var(--ink-3);}
-.tr.on .tr-prog i{background:var(--ink);}
-.tr-have{flex-shrink:0;font-size:11px;font-weight:700;color:var(--ink-3);min-width:44px;text-align:right;}
-.tr.on .tr-have{color:var(--ink);}
-.foot{margin-top:30px;text-align:center;font-size:11px;color:var(--ink-3);line-height:1.7;}
-.empty-note{font-size:12px;color:var(--ink-3);text-align:center;padding:8px 0 4px;letter-spacing:.5px;}
 
-/* ===== コラージュ アクセント ===== */
-.title,.tr-title{font-family:'Yomogi',cursive;}
-.group-h{background:var(--tape2);transform:rotate(-1deg);}
-.scorebar i{background:var(--tape3);}
-.tr.on .tr-badge{background:var(--tape3);border-color:var(--tape3);}
-.tr.on .tr-prog i{background:var(--tape3);}
+:root{
+  /* --- HIG セマンティックカラー（Light）: index.html と同一 --- */
+  --label:#1C1C1E;
+  --secondary-label:rgba(60,60,67,.6);
+  --tertiary-label:rgba(60,60,67,.45);
+  --bg:#F2F2F7;            /* 純白回避 */
+  --bg-elevated:#FFFFFF;
+  --separator:rgba(60,60,67,.29);
+  --separator-weak:rgba(60,60,67,.14);
+  --fill:rgba(118,118,128,.12);
+  --fill-2:rgba(118,118,128,.08);
+  --tint:#B85C1E;                    /* 醤油の琥珀（systemBlueの代わり） */
+  --tint-weak:rgba(184,92,30,.12);
+  --on-tint:#FFFFFF;
+  --red:#FF3B30;
+  --green:#34C759;
+  --yellow:#FFB300;                  /* ★相当の強調 */
+  --star-off:rgba(60,60,67,.22);
+  --focus:#B85C1E;
+  --font-sys:-apple-system,"SF Pro Text","SF Pro Display","Hiragino Kaku Gothic ProN","Hiragino Sans",system-ui,sans-serif;
+  --r-card:14px;--r-ctl:12px;--r-chip:999px;
+}
+@media (prefers-color-scheme:dark){
+  :root{
+    --label:#FFFFFF;
+    --secondary-label:rgba(235,235,245,.6);
+    --tertiary-label:rgba(235,235,245,.45);
+    --bg:#000000;                    /* iOS標準として可 */
+    --bg-elevated:#1C1C1E;
+    --separator:rgba(84,84,88,.65);
+    --separator-weak:rgba(84,84,88,.4);
+    --fill:rgba(118,118,128,.24);
+    --fill-2:rgba(118,118,128,.16);
+    --tint:#F0A35E;
+    --tint-weak:rgba(240,163,94,.18);
+    --on-tint:#1C1C1E;
+    --red:#FF453A;
+    --green:#30D158;
+    --yellow:#FFD426;
+    --star-off:rgba(235,235,245,.25);
+    --focus:#F0A35E;
+  }
+}
+
+html,body{height:100%;}
+body{font-family:var(--font-sys);color:var(--label);background-color:var(--bg);
+  min-height:100dvh;overflow-x:hidden;-webkit-font-smoothing:antialiased;
+  font-size:17px;line-height:1.45;}
+.wrap{max-width:520px;margin:0 auto;
+  padding:calc(env(safe-area-inset-top) + 8px) 16px calc(env(safe-area-inset-bottom) + 40px);}
+
+/* グローバル: フォーカスリング & reduced-motion (WCAG 2.4.7 / 2.3) */
+:focus-visible{outline:3px solid var(--focus);outline-offset:2px;border-radius:8px;}
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation:none!important;transition:none!important;scroll-behavior:auto!important;}
+}
+
+/* ===== back link（iOS ナビ戻る相当・44px標的） ===== */
+.back{display:inline-flex;align-items:center;gap:3px;
+  min-height:44px;padding:4px 4px 4px 0;margin:0 0 2px -2px;
+  font-size:17px;font-weight:400;color:var(--tint);
+  text-decoration:none;letter-spacing:.1px;
+  transition:opacity .15s ease;}
+.back::before{content:"\2039";font-size:26px;line-height:1;font-weight:500;margin-top:-1px;}
+.back:hover{opacity:.7;}
+.back:active{opacity:.45;}
+
+/* ===== Large Title「トロフィー」 ===== */
+.title{font-size:34px;line-height:41px;font-weight:700;color:var(--label);
+  letter-spacing:.4px;margin:2px 0 0;}
+
+/* ===== スコア（インセットグループ） ===== */
+.score-card{background:var(--bg-elevated);border-radius:var(--r-card);
+  border:1px solid var(--separator-weak);box-shadow:0 1px 2px rgba(0,0,0,.04);
+  padding:16px 16px 18px;margin:16px 0 10px;}
+.score{font-size:15px;font-weight:600;color:var(--secondary-label);
+  letter-spacing:.2px;display:flex;align-items:baseline;gap:8px;}
+.score #score{font-size:22px;font-weight:700;color:var(--label);
+  font-variant-numeric:tabular-nums;letter-spacing:0;}
+.scorebar{height:10px;border-radius:var(--r-chip);background:var(--fill);
+  overflow:hidden;margin-top:13px;}
+.scorebar i{display:block;height:100%;background:var(--tint);
+  border-radius:var(--r-chip);transition:width .4s cubic-bezier(.16,1,.3,1);}
+
+/* ===== グループ見出し（iOS グループドリスト ヘッダ） ===== */
+.group-h{display:flex;align-items:baseline;justify-content:space-between;gap:10px;
+  font-size:13px;font-weight:600;letter-spacing:.3px;color:var(--secondary-label);
+  text-transform:none;padding:0 8px 7px;margin:26px 0 0;}
+.group-h .grp-n{font-size:13px;font-weight:600;color:var(--tertiary-label);
+  font-variant-numeric:tabular-nums;}
+
+/* グループ見出しの直後から連続する .tr がインセットグループ（カード）を形成。
+   先頭/末尾の角丸は :first-of-type / 直前が .group-h の行で表現する。 */
+.tr{position:relative;display:flex;align-items:center;gap:13px;
+  background:var(--bg-elevated);
+  padding:12px 14px;min-height:60px;
+  border-left:1px solid var(--separator-weak);
+  border-right:1px solid var(--separator-weak);}
+/* 行間の区切り線（iOS インセット: バッジ幅ぶん字下げ） */
+.tr::after{content:"";position:absolute;left:65px;right:0;bottom:0;
+  height:1px;background:var(--separator-weak);}
+/* グループ見出しの直後（=グループ先頭行）: 上角丸＋上境界 */
+.group-h + .tr{border-top:1px solid var(--separator-weak);
+  border-top-left-radius:var(--r-card);border-top-right-radius:var(--r-card);
+  box-shadow:0 1px 2px rgba(0,0,0,.04);}
+/* グループ末尾行（次が .group-h）/ リスト最終行: 下角丸＋全幅境界・区切り線消す */
+.tr:has(+ .group-h),.tr:last-child{
+  border-bottom:1px solid var(--separator-weak);
+  border-bottom-left-radius:var(--r-card);border-bottom-right-radius:var(--r-card);}
+.tr:has(+ .group-h)::after,.tr:last-child::after{display:none;}
+
+/* バッジ: 獲得=tint塗り / 未獲得=淡色アウトライン（色のみ依存しない: ✓ / 🔒 文字併用） */
+.tr-badge{width:38px;height:38px;flex-shrink:0;border-radius:10px;
+  display:flex;align-items:center;justify-content:center;
+  font-size:17px;font-weight:700;line-height:1;
+  background:var(--fill);color:var(--tertiary-label);
+  border:1.5px solid var(--separator-weak);}
+.tr.on .tr-badge{background:var(--tint);color:var(--on-tint);border-color:var(--tint);}
+
+.tr-body{flex:1;min-width:0;}
+.tr-title{font-size:17px;font-weight:600;color:var(--secondary-label);
+  letter-spacing:.1px;line-height:1.3;}
+.tr.on .tr-title{color:var(--label);}
+.tr-desc{font-size:13px;color:var(--tertiary-label);margin-top:2px;
+  letter-spacing:.1px;line-height:1.35;}
+
+/* 進捗バー: 獲得=tint / 未獲得=淡色 */
+.tr-prog{height:6px;border-radius:var(--r-chip);background:var(--fill);
+  overflow:hidden;margin-top:9px;}
+.tr-prog i{display:block;height:100%;background:var(--tertiary-label);
+  border-radius:var(--r-chip);transition:width .4s cubic-bezier(.16,1,.3,1);}
+.tr.on .tr-prog i{background:var(--tint);}
+
+/* 右端: 「獲得」=tint文言（色＋文言） / 未獲得=have/target */
+.tr-have{flex-shrink:0;font-size:13px;font-weight:600;color:var(--secondary-label);
+  min-width:46px;text-align:right;font-variant-numeric:tabular-nums;letter-spacing:.1px;}
+.tr.on .tr-have{color:var(--tint);}
+
+/* 空状態（記録なし） */
+.empty-note{font-size:15px;color:var(--secondary-label);text-align:center;
+  padding:18px 16px 6px;letter-spacing:.2px;line-height:1.6;}
+
+.foot{margin-top:26px;text-align:center;font-size:13px;color:var(--tertiary-label);
+  line-height:1.7;letter-spacing:.2px;}
 </style>
 </head>
 <body>
 <div class="wrap">
-  <a class="back" href="index.html">← 麺帳にもどる</a>
-  <div class="title">トロフィー</div>
-  <div class="score" id="score"></div>
-  <div class="scorebar"><i id="scorebar"></i></div>
+  <a class="back" href="index.html">麺帳</a>
+  <h1 class="title">トロフィー</h1>
+  <div class="score-card">
+    <div class="score" aria-live="polite"><span id="score"></span></div>
+    <div class="scorebar" role="img" aria-label="トロフィー獲得の進捗"><i id="scorebar"></i></div>
+  </div>
   <div id="list"></div>
-  <div class="foot">麺を食べて記録すると自動で獲得 ✦</div>
+  <p class="foot">麺を食べて記録すると自動で獲得します</p>
 </div>
 <script>
 const KEY='ramenLog.v1'
@@ -78,7 +194,7 @@ $('scorebar').style.width=ach.length?Math.round(earnedN/ach.length*100)+'%':'0%'
 
 function trItem(a){
   return `<div class="tr ${a.earned?'on':''}">
-      <div class="tr-badge">${a.earned?'✓':'🔒'}</div>
+      <div class="tr-badge" aria-hidden="true">${a.earned?'✓':'🔒'}</div>
       <div class="tr-body">
         <div class="tr-title">${esc(a.title)}</div>
         <div class="tr-desc">${esc(a.desc)}</div>
@@ -97,7 +213,7 @@ const genres=(window.MENCHO_GENRES||[])
 let html=section('総合', ach.filter(a=>a.group==='総合'))
 genres.forEach(g=>{ html+=section(g, ach.filter(a=>a.id.split(':')[1]===g)) })
 // 記録が無くても全トロフィーを一覧表示（目標を眺められる）
-$('list').innerHTML = (records.length?'':'<div class="empty-note">まだ記録なし。これが集めるトロフィー一覧 ✦</div>') + html
+$('list').innerHTML = (records.length?'':'<div class="empty-note">まだ記録なし。これが集めるトロフィー一覧です。</div>') + html
 if('serviceWorker' in navigator){addEventListener('load',()=>navigator.serviceWorker.register('sw.js').catch(()=>{}))}
 </script>
 </body>
