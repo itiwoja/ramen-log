@@ -156,6 +156,12 @@ input,textarea,select,[contenteditable]{-webkit-user-select:text;user-select:tex
 html:has(.mask.on),body:has(.mask.on),html:has(#viewer.on),body:has(#viewer.on){overflow:hidden;}
 .sheet{overscroll-behavior:contain;}
 .mask{touch-action:none;overscroll-behavior:none;} /* 暗幕もスクロール不可 */
+
+/* ページ間のなめらか遷移（クロスドキュメント View Transitions・未対応は通常遷移） */
+@view-transition{ navigation: auto; }
+@media (prefers-reduced-motion: reduce){
+  ::view-transition-group(*),::view-transition-old(*),::view-transition-new(*){animation:none!important;}
+}
 </style>
 </head>
 <body>

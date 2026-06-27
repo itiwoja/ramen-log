@@ -44,6 +44,12 @@
   --focus:#B85C1E;
   --font-sys:-apple-system,"SF Pro Text","SF Pro Display","Hiragino Kaku Gothic ProN","Hiragino Sans",system-ui,sans-serif;
   --r-card:14px;--r-sheet:14px;--r-ctl:12px;--r-chip:999px;
+  /* --- モーション・トークン（motion-design）transform/opacityのみ駆動 --- */
+  --ease-standard:cubic-bezier(.2,0,0,1);
+  --ease-decelerate:cubic-bezier(.05,.7,.1,1);   /* 出現 */
+  --ease-accelerate:cubic-bezier(.3,0,.8,.15);   /* 退出 */
+  --ease-spring:cubic-bezier(.34,1.56,.64,1);    /* 弾むスプリング感 */
+  --dur-fast:140ms;--dur:240ms;--dur-slow:380ms;
 }
 @media (prefers-color-scheme:dark){
   :root{
@@ -348,6 +354,38 @@ input,textarea,select,[contenteditable]{-webkit-user-select:text;user-select:tex
 html:has(.mask.on),body:has(.mask.on),html:has(#viewer.on),body:has(#viewer.on){overflow:hidden;}
 .sheet{overscroll-behavior:contain;}
 .mask{touch-action:none;overscroll-behavior:none;} /* 暗幕もスクロール不可 */
+
+/* ===== モーション層（motion-design）=====
+   触感のスプリング化と出現アニメ。transform/opacity のみ駆動。
+   既存の reduced-motion ブロック(上部)が animation/transition を無効化するため自動でオフになる。 */
+/* 押下のスプリング感（タップ標的サイズは不変） */
+.fchip,.wchip,.type-opt,.pp-opt,.shop-find,.gear,.save-btn,.del-btn,.d-edit,.bk-btn,.fab,.card{
+  transition:transform var(--dur-fast) var(--ease-spring),
+             background var(--dur-fast) var(--ease-standard),
+             opacity var(--dur-fast) var(--ease-standard),
+             box-shadow var(--dur) var(--ease-standard);
+}
+.fchip:active,.wchip:active,.type-opt:active,.pp-opt:active,.shop-find:active,
+.save-btn:active,.d-edit:active,.bk-btn:active{transform:scale(.96);}
+/* リスト項目の出現（軽い stagger・過剰にしない） */
+@keyframes cardIn{from{opacity:0;transform:translateY(6px);}to{opacity:1;transform:translateY(0);}}
+.list .card-wrap{animation:cardIn var(--dur) var(--ease-decelerate) both;}
+.list .card-wrap:nth-child(2){animation-delay:30ms;}
+.list .card-wrap:nth-child(3){animation-delay:60ms;}
+.list .card-wrap:nth-child(4){animation-delay:90ms;}
+.list .card-wrap:nth-child(5){animation-delay:120ms;}
+.list .card-wrap:nth-child(n+6){animation-delay:150ms;}
+
+/* 同一ページの状態遷移（withVT）用クロスフェード。reduced-motion は下のブロックで無効化 */
+
+/* ページ間のなめらか遷移（クロスドキュメント View Transitions・未対応は通常遷移） */
+@view-transition{ navigation: auto; }
+@media (prefers-reduced-motion: reduce){
+  ::view-transition-group(*),::view-transition-old(*),::view-transition-new(*){animation:none!important;}
+  /* 同一ドキュメント View Transition も無効化 */
+  ::view-transition-old(root),::view-transition-new(root){animation:none!important;}
+  .list .card-wrap{animation:none!important;}
+}
 </style>
 </head>
 <body>
@@ -535,6 +573,12 @@ function uid(){return Date.now().toString(36)+Math.random().toString(36).slice(2
 
 const $=id=>document.getElementById(id)
 
+// 同一ページ View Transition ヘルパー（未対応/reduced-motion はそのまま実行＝壊れない）
+function withVT(fn){
+  if(!document.startViewTransition||matchMedia('(prefers-reduced-motion: reduce)').matches) return fn()
+  return document.startViewTransition(fn)
+}
+
 // ===== 写真ストレージ (IndexedDB / Blob) =====
 // 写真は容量の大きい IndexedDB に保存。localStorage には文字情報のみ。
 const IDB_NAME='menchoDB', IDB_STORE='photos'
@@ -687,12 +731,12 @@ function render(){
   const present=[...new Set(records.map(r=>r.type).filter(Boolean))]
   const fopts=['すべて',...present]
   $('filters').innerHTML=fopts.map(f=>`<div class="fchip ${f===filter?'on':''}" data-f="${f}">${f}</div>`).join('')
-  $('filters').querySelectorAll('.fchip').forEach(el=>el.onclick=()=>{filter=el.dataset.f;render()})
+  $('filters').querySelectorAll('.fchip').forEach(el=>el.onclick=()=>{filter=el.dataset.f;withVT(()=>render())})
 
   // タグの絞り込み行
   const allTags=[...new Set(records.flatMap(r=>r.tags||[]))]
   $('tagFilters').innerHTML=allTags.map(t=>`<div class="fchip tag ${t===activeTag?'on':''}" data-t="${esc(t)}">#${esc(t)}</div>`).join('')
-  $('tagFilters').querySelectorAll('.fchip').forEach(el=>el.onclick=()=>{activeTag=(activeTag===el.dataset.t)?null:el.dataset.t;render()})
+  $('tagFilters').querySelectorAll('.fchip').forEach(el=>el.onclick=()=>{activeTag=(activeTag===el.dataset.t)?null:el.dataset.t;withVT(()=>render())})
 
   let items=records.filter(r=>(filter==='すべて'||r.type===filter)&&(!activeTag||(r.tags||[]).includes(activeTag)))
   if(query){const q=query.toLowerCase();items=items.filter(r=>`${r.menu||''} ${r.shop||''} ${r.memo||''} ${(r.tags||[]).join(' ')}`.toLowerCase().includes(q))}
@@ -736,8 +780,8 @@ function sortItems(arr){
   }
   return a
 }
-$('search').oninput=e=>{query=e.target.value.trim();render()}
-$('sort').onchange=e=>{sortBy=e.target.value;render()}
+$('search').oninput=e=>{query=e.target.value.trim();withVT(()=>render())}
+$('sort').onchange=e=>{sortBy=e.target.value;withVT(()=>render())}
 
 // 店名/座標から Google マップのURLを作る (キー不要)
 function mapUrl(r){
