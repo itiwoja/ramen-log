@@ -219,6 +219,14 @@ body{font-family:var(--font-sys);color:var(--label);background-color:var(--bg);
 .field input:focus,.field textarea:focus{outline:none;border-color:var(--tint);background:var(--bg-elevated);}
 .field input:focus-visible,.field textarea:focus-visible{outline:3px solid var(--focus);outline-offset:1px;}
 .field textarea{resize:none;min-height:64px;line-height:1.5;}
+/* 邪魔しないバリデーション: 入力途中では怒らず、確定(フォーカスアウト)後に枠を赤く。 */
+.field input:user-invalid{border-color:var(--red);}
+.field input[aria-invalid="true"]{border-color:var(--red);}
+/* インラインエラー(該当欄のすぐ下)。行高を確保しレイアウトシフトを抑える。 */
+.field-err{min-height:18px;margin-top:6px;font-size:13px;font-weight:500;color:var(--red);
+  letter-spacing:.1px;opacity:0;transition:opacity var(--dur-fast) var(--ease-standard);}
+.field-err.on{opacity:1;}
+@media (prefers-reduced-motion:reduce){.field-err{transition:none;}}
 .row2{display:flex;gap:14px;}
 .row2 .field{flex:1;}
 
@@ -267,6 +275,7 @@ body{font-family:var(--font-sys);color:var(--label);background-color:var(--bg);
   padding:16px;font-family:inherit;font-size:17px;font-weight:600;letter-spacing:.2px;cursor:pointer;margin-top:8px;min-height:50px;
   transition:transform .1s ease,opacity .15s ease;}
 .save-btn:active{transform:scale(.98);opacity:.92;}
+.save-btn:disabled{opacity:.55;cursor:default;transform:none;}
 .del-btn{width:100%;background:transparent;color:var(--red);border:none;
   padding:14px;font-family:inherit;font-size:15px;font-weight:400;cursor:pointer;margin-top:6px;min-height:44px;}
 .del-btn:active{opacity:.6;}
@@ -477,7 +486,8 @@ html:has(.mask.on),body:has(.mask.on),html:has(#viewer.on),body:has(#viewer.on){
 
   <div class="field">
     <label for="f-menu">メニュー名</label>
-    <input type="text" id="f-menu" placeholder="肉うどん / 醤油ラーメン / カルボナーラ" maxlength="40">
+    <input type="text" id="f-menu" placeholder="肉うどん / 醤油ラーメン / カルボナーラ" maxlength="40" required aria-describedby="f-menu-err">
+    <div class="field-err" id="f-menu-err" role="alert"></div>
   </div>
   <div class="field">
     <label for="f-shop">お店</label>
@@ -1010,7 +1020,7 @@ function openAdd(){
   paintStars();resetPhotoUI();renderTagChips()
   $('shopResults').classList.remove('on');paintShopLoc()
   $('delBtn').classList.add('hidden')
-  $('saveBtn').textContent='記録する'
+  $('saveBtn').textContent='記録する';$('saveBtn').disabled=false;setMenuError('')
   showSheet()
 }
 async function openEdit(id){
@@ -1028,7 +1038,7 @@ async function openEdit(id){
   paintStars();paintPhoto();renderTagChips()
   $('shopResults').classList.remove('on');paintShopLoc()
   $('delBtn').classList.remove('hidden')
-  $('saveBtn').textContent='更新する'
+  $('saveBtn').textContent='更新する';$('saveBtn').disabled=false;setMenuError('')
   showSheet()
 }
 
@@ -1037,9 +1047,29 @@ function hideSheet(){$('mask').classList.remove('on');$('sheet').classList.remov
 $('mask').onclick=hideSheet
 $('fab').onclick=openAdd
 
+// インラインエラー制御（f-menu 用）。toast は補助、インラインが主。
+function setMenuError(msg){
+  const el=$('f-menu-err'),inp=$('f-menu')
+  if(msg){el.textContent=msg;el.classList.add('on');inp.setAttribute('aria-invalid','true')}
+  else{el.textContent='';el.classList.remove('on');inp.removeAttribute('aria-invalid')}
+}
+// 入力されたらエラーを消す（入力中は怒らない）
+$('f-menu').addEventListener('input',()=>{ if($('f-menu').value.trim()) setMenuError('') })
+
 $('saveBtn').onclick=async()=>{
   const menu=$('f-menu').value.trim()
-  if(!menu){toast('メニュー名を入れてね');$('f-menu').focus();return}
+  if(!menu){
+    setMenuError('メニュー名を入力してください')
+    toast('メニュー名を入れてね')
+    $('f-menu').focus()
+    return
+  }
+  setMenuError('')
+  // 二重送信防止＋完了サイン: 押下で即無効化。エラー中断時のみ復帰させる。
+  const _btn=$('saveBtn'),_label=_btn.textContent
+  _btn.disabled=true;_btn.textContent='保存中…'
+  const _fail=()=>{_btn.disabled=false;_btn.textContent=_label}
+  try{
   const id=editId||uid()
   const isNew=!editId
   // 写真は IndexedDB へ複数保存（localStorage には入れない）
@@ -1061,6 +1091,7 @@ $('saveBtn').onclick=async()=>{
   else{records.unshift(rec);toast('記録したよ')}
   try{save()}catch(e){toast('保存に失敗…')}
   hideSheet();render();celebrateTrophies();if(isNew)celebrate()
+  }catch(e){ _fail();toast('保存に失敗…') }  // 予期せぬ中断時はボタンを再度有効化
 }
 
 // トロフィー: 新規獲得をトーストで祝う
