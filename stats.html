@@ -216,6 +216,11 @@ body{font-family:var(--font-sys);color:var(--label);background-color:var(--bg);
 .none{padding:24px 0;text-align:center;color:var(--secondary-label);font-size:15px;}
 .empty-all{padding:100px 24px;text-align:center;color:var(--secondary-label);background:transparent!important;box-shadow:none!important;padding-block:100px;}
 .empty-all .t{font-size:17px;font-weight:600;color:var(--label);}
+
+/* アプリ的挙動: 長押しの文字選択を無効 / プルto更新を無効 */
+html,body{overscroll-behavior:none;}
+body{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;}
+input,textarea,select,[contenteditable]{-webkit-user-select:text;user-select:text;-webkit-touch-callout:default;}
 </style>
 </head>
 <body>

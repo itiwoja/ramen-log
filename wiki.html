@@ -146,6 +146,11 @@ body{font-family:var(--font-sys);color:var(--label);background-color:var(--bg);
 
 .none{padding:60px 16px;text-align:center;color:var(--muted);font-size:17px;}
 .foot{margin-top:34px;text-align:center;font-size:13px;color:var(--muted);line-height:1.7;letter-spacing:.1px;}
+
+/* アプリ的挙動: 長押しの文字選択を無効 / プルto更新を無効 */
+html,body{overscroll-behavior:none;}
+body{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;}
+input,textarea,select,[contenteditable]{-webkit-user-select:text;user-select:text;-webkit-touch-callout:default;}
 </style>
 </head>
 <body>
