@@ -172,6 +172,10 @@ body{font-family:var(--font-sys);color:var(--label);background-color:var(--bg);
 html,body{overscroll-behavior:none;}
 body{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;}
 input,textarea,select,[contenteditable]{-webkit-user-select:text;user-select:text;-webkit-touch-callout:default;}
+
+/* モーダル/ビューア表示中は背景をロック（スワイプ貫通防止） */
+html:has(.mask.on),body:has(.mask.on),html:has(#viewer.on),body:has(#viewer.on){overflow:hidden;}
+.sheet{overscroll-behavior:contain;}
 </style>
 </head>
 <body>
