@@ -1,6 +1,6 @@
 // 麺帳 Service Worker — オフライン対応
 // データ(localStorage/IndexedDB)には触れない。アプリ本体(HTML/CSS/フォント)のみキャッシュ。
-const CACHE = 'mencho-v8'
+const CACHE = 'mencho-v9'
 const ASSETS = ['./','index.html','stats.html','wiki.html','trophy.html','achievements.js','manifest.webmanifest','icon.svg']
 
 self.addEventListener('install', e => {
