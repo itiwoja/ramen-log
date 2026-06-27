@@ -183,6 +183,13 @@ html:has(.mask.on),body:has(.mask.on),html:has(#viewer.on),body:has(#viewer.on){
 @media (prefers-reduced-motion: reduce){
   ::view-transition-group(*),::view-transition-old(*),::view-transition-new(*){animation:none!important;}
 }
+
+/* ページ間遷移を躍動的に（index と統一） */
+::view-transition-old(root){ animation: vtOut 220ms cubic-bezier(.3,0,.8,.15) both; }
+::view-transition-new(root){ animation: vtIn 360ms cubic-bezier(.34,1.56,.64,1) both; }
+@keyframes vtOut{ to{opacity:0;transform:translateY(-10px) scale(.97);} }
+@keyframes vtIn{ from{opacity:0;transform:translateY(16px) scale(1.02);} }
+@media (prefers-reduced-motion: reduce){ ::view-transition-old(root),::view-transition-new(root){animation:none!important;} }
 </style>
 </head>
 <body>

@@ -180,7 +180,7 @@ body{font-family:var(--font-sys);color:var(--label);background-color:var(--bg);
 .mask.on{opacity:1;visibility:visible;}
 .sheet{position:fixed;left:0;right:0;bottom:0;max-width:520px;margin:0 auto;background:var(--bg-elevated);
   border-radius:var(--r-sheet) var(--r-sheet) 0 0;z-index:51;transform:translateY(100%);
-  transition:transform .34s cubic-bezier(.16,1,.3,1);max-height:92dvh;overflow-y:auto;
+  transition:transform var(--dur-slow) var(--ease-spring);max-height:92dvh;overflow-y:auto;
   padding:0 20px calc(env(safe-area-inset-bottom) + 24px);
   box-shadow:0 -8px 40px rgba(0,0,0,.18);}
 .sheet.on{transform:none;}
@@ -355,36 +355,62 @@ html:has(.mask.on),body:has(.mask.on),html:has(#viewer.on),body:has(#viewer.on){
 .sheet{overscroll-behavior:contain;}
 .mask{touch-action:none;overscroll-behavior:none;} /* 暗幕もスクロール不可 */
 
-/* ===== モーション層（motion-design）=====
-   触感のスプリング化と出現アニメ。transform/opacity のみ駆動。
-   既存の reduced-motion ブロック(上部)が animation/transition を無効化するため自動でオフになる。 */
-/* 押下のスプリング感（タップ標的サイズは不変） */
+/* ===== モーション層（motion-design / Phase3 強化）=====
+   触感のスプリング化と出現アニメをよりダイナミックに。transform/opacity のみ駆動。
+   既存の reduced-motion ブロック(上部)が animation/transition を無効化するため自動でオフになる。
+   will-change は付けっぱなしにしない（押下/出現の一過性のみ）。 */
+/* 押下のスプリング感（タップ標的サイズ=44px は不変・scale だけ変える） */
 .fchip,.wchip,.type-opt,.pp-opt,.shop-find,.gear,.save-btn,.del-btn,.d-edit,.bk-btn,.fab,.card{
   transition:transform var(--dur-fast) var(--ease-spring),
              background var(--dur-fast) var(--ease-standard),
              opacity var(--dur-fast) var(--ease-standard),
              box-shadow var(--dur) var(--ease-standard);
 }
+/* 押下を強める: scale(.92)。戻り(:active 解除)で --ease-spring により軽いオーバーシュート感 */
 .fchip:active,.wchip:active,.type-opt:active,.pp-opt:active,.shop-find:active,
-.save-btn:active,.d-edit:active,.bk-btn:active{transform:scale(.96);}
-/* リスト項目の出現（軽い stagger・過剰にしない） */
-@keyframes cardIn{from{opacity:0;transform:translateY(6px);}to{opacity:1;transform:translateY(0);}}
-.list .card-wrap{animation:cardIn var(--dur) var(--ease-decelerate) both;}
-.list .card-wrap:nth-child(2){animation-delay:30ms;}
-.list .card-wrap:nth-child(3){animation-delay:60ms;}
-.list .card-wrap:nth-child(4){animation-delay:90ms;}
-.list .card-wrap:nth-child(5){animation-delay:120ms;}
-.list .card-wrap:nth-child(n+6){animation-delay:150ms;}
+.gear:active,.save-btn:active,.del-btn:active,.d-edit:active,.bk-btn:active,.card:active{transform:scale(.92);}
 
-/* 同一ページの状態遷移（withVT）用クロスフェード。reduced-motion は下のブロックで無効化 */
+/* リスト項目の躍動的な出現（opacity / translateY / scale + spring + stagger 上限8件） */
+@keyframes cardIn{from{opacity:0;transform:translateY(18px) scale(.97);}to{opacity:1;transform:translateY(0) scale(1);}}
+.list .card-wrap{animation:cardIn var(--dur) var(--ease-spring) both;}
+.list .card-wrap:nth-child(2){animation-delay:35ms;}
+.list .card-wrap:nth-child(3){animation-delay:70ms;}
+.list .card-wrap:nth-child(4){animation-delay:105ms;}
+.list .card-wrap:nth-child(5){animation-delay:140ms;}
+.list .card-wrap:nth-child(6){animation-delay:175ms;}
+.list .card-wrap:nth-child(7){animation-delay:210ms;}
+.list .card-wrap:nth-child(8){animation-delay:245ms;}
+.list .card-wrap:nth-child(n+9){animation-delay:280ms;}
+
+/* FAB: 初回/表示時の軽い bounce-in（scale .8→1 spring）。
+   fill は none（既定）にして、終了後は base の translateX(-50%) と :active が効くようにする。
+   translateX(-50%) を全 keyframe に内包し、resting transform を壊さない。 */
+@keyframes fabIn{
+  0%{opacity:0;transform:translateX(-50%) scale(.8);}
+  60%{opacity:1;transform:translateX(-50%) scale(1.06);}
+  100%{opacity:1;transform:translateX(-50%) scale(1);}
+}
+.fab{animation:fabIn var(--dur-slow) var(--ease-spring);}
+.fab:active{transform:translateX(-50%) scale(.9);}
+
+/* ★評価タップのポップ（選択時に一瞬 scale 1.3→1 spring） */
+@keyframes starPop{0%{transform:scale(1);}40%{transform:scale(1.3);}100%{transform:scale(1);}}
+.star-pick span.on{animation:starPop var(--dur) var(--ease-spring);}
+
+/* 同一ドキュメント View Transition（withVT）に方向性のキーフレーム＝躍動的に。
+   既定クロスフェードを上書きし、退出は加速・出現はスプリング。reduced-motion は下で無効化 */
+::view-transition-old(root){ animation: vtOut 220ms var(--ease-accelerate) both; }
+::view-transition-new(root){ animation: vtIn 360ms var(--ease-spring) both; }
+@keyframes vtOut{ to{ opacity:0; transform: translateY(-10px) scale(.97);} }
+@keyframes vtIn { from{ opacity:0; transform: translateY(16px) scale(1.02);} }
 
 /* ページ間のなめらか遷移（クロスドキュメント View Transitions・未対応は通常遷移） */
 @view-transition{ navigation: auto; }
 @media (prefers-reduced-motion: reduce){
   ::view-transition-group(*),::view-transition-old(*),::view-transition-new(*){animation:none!important;}
-  /* 同一ドキュメント View Transition も無効化 */
+  /* 同一ドキュメント View Transition（root）も明示無効化 */
   ::view-transition-old(root),::view-transition-new(root){animation:none!important;}
-  .list .card-wrap{animation:none!important;}
+  .list .card-wrap,.fab,.star-pick span.on{animation:none!important;}
 }
 </style>
 </head>
