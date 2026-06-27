@@ -132,6 +132,15 @@ body{font-family:var(--font-sys);color:var(--label);background-color:var(--bg);
 /* ===== list: 写真主役のカード（bg-elevated・薄い境界・角丸） ===== */
 .list{display:flex;flex-direction:column;gap:12px;}
 .list-hint{font-size:13px;color:var(--tertiary-label);text-align:center;margin-bottom:12px;letter-spacing:.2px;}
+/* 検索/フィルタ結果0件の親切な空状態（条件クリア導線つき） */
+.no-result{text-align:center;padding:48px 24px;}
+.no-result .nr-t{font-size:16px;font-weight:600;color:var(--secondary-label);}
+.no-result .nr-d{font-size:14px;color:var(--tertiary-label);margin-top:8px;line-height:1.6;}
+.nr-clear{margin-top:18px;background:var(--fill);color:var(--tint);border:none;border-radius:var(--r-chip);
+  padding:10px 20px;font-family:inherit;font-size:15px;font-weight:600;cursor:pointer;min-height:44px;
+  transition:background var(--dur-fast) var(--ease-standard),transform var(--dur-fast) var(--ease-spring);}
+.nr-clear:hover{background:var(--tint-weak);}
+.nr-clear:active{transform:scale(.92);background:var(--tint-weak);}
 .card-wrap{position:relative;border-radius:var(--r-card);overflow:hidden;}
 /* 2段階スワイプ削除: 露出ボタンは iOS赤(destructive) */
 .card-del{position:absolute;inset:0;display:flex;align-items:center;justify-content:flex-end;cursor:pointer;
@@ -165,6 +174,13 @@ body{font-family:var(--font-sys);color:var(--label);background-color:var(--bg);
 .empty .e{font-size:34px;font-weight:700;color:var(--separator);letter-spacing:2px;margin-bottom:16px;}
 .empty .t{font-size:17px;font-weight:600;color:var(--secondary-label);}
 .empty .d{font-size:15px;margin-top:10px;line-height:1.7;color:var(--tertiary-label);}
+/* 空状態のオンボーディングCTA（FABと同じ openAdd を呼ぶ・先にやってみるを促す） */
+.empty-cta{margin-top:26px;background:var(--tint);color:var(--on-tint);border:none;border-radius:var(--r-chip);
+  padding:14px 26px;font-family:inherit;font-size:17px;font-weight:600;letter-spacing:.2px;cursor:pointer;min-height:50px;
+  box-shadow:0 6px 20px rgba(184,92,30,.32);
+  transition:transform var(--dur-fast) var(--ease-spring),box-shadow var(--dur) var(--ease-standard);}
+.empty-cta:hover{box-shadow:0 8px 24px rgba(184,92,30,.4);}
+.empty-cta:active{transform:scale(.92);}
 
 /* ===== FAB「＋記録する」: tint塗りの prominent ボタン ===== */
 .fab{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(env(safe-area-inset-bottom) + 20px);
@@ -196,7 +212,9 @@ body{font-family:var(--font-sys);color:var(--label);background-color:var(--bg);
 .ps-thumb{flex:0 0 auto;width:78px;height:78px;border-radius:10px;position:relative;
   background:var(--separator-weak) center/cover no-repeat;}
 .ps-x{position:absolute;top:-7px;right:-7px;min-width:24px;min-height:24px;width:24px;height:24px;border-radius:50%;border:2px solid var(--bg-elevated);
-  background:var(--red);color:#fff;font-size:12px;cursor:pointer;line-height:1;display:flex;align-items:center;justify-content:center;}
+  background:var(--red);color:#fff;font-size:12px;cursor:pointer;line-height:1;display:flex;align-items:center;justify-content:center;
+  transition:transform var(--dur-fast) var(--ease-spring);}
+.ps-x:active{transform:scale(.85);}
 .pp-empty{display:flex;gap:12px;}
 .pp-opt{background:var(--bg-elevated);border:1px solid var(--separator-weak);border-radius:var(--r-ctl);
   padding:14px 22px;font-family:inherit;font-size:15px;font-weight:500;color:var(--tint);cursor:pointer;
@@ -302,6 +320,8 @@ body{font-family:var(--font-sys);color:var(--label);background-color:var(--bg);
 .sort{flex-shrink:0;border:none;border-radius:var(--r-ctl);background:var(--fill);
   padding:0 10px;min-height:44px;font-family:inherit;font-size:15px;font-weight:500;color:var(--tint);cursor:pointer;}
 .sort:focus{outline:none;}
+/* キーボードフォーカスは必ず可視化（WCAG 2.4.7）。マウス/タッチの :focus 抑制は維持 */
+.search:focus-visible,.sort:focus-visible{outline:3px solid var(--focus);outline-offset:2px;}
 
 /* 詳細シート */
 .d-photo{width:100%;height:230px;border-radius:var(--r-card);overflow:hidden;background:var(--fill);
@@ -348,7 +368,8 @@ body{font-family:var(--font-sys);color:var(--label);background-color:var(--bg);
 #viewer{position:fixed;inset:0;background:rgba(0,0,0,.94);z-index:200;display:none;align-items:center;justify-content:center;touch-action:none;}
 #viewer.on{display:flex;}
 #viewerImg{max-width:100%;max-height:100%;transform-origin:center center;will-change:transform;}
-#viewerClose{position:absolute;top:calc(env(safe-area-inset-top) + 12px);right:16px;min-width:44px;min-height:44px;width:44px;height:44px;border-radius:50%;border:none;background:rgba(118,118,128,.4);color:#fff;font-size:18px;cursor:pointer;z-index:2;-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);}
+#viewerClose{position:absolute;top:calc(env(safe-area-inset-top) + 12px);right:16px;min-width:44px;min-height:44px;width:44px;height:44px;border-radius:50%;border:none;background:rgba(118,118,128,.4);color:#fff;font-size:18px;cursor:pointer;z-index:2;-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);transition:transform var(--dur-fast) var(--ease-spring);}
+#viewerClose:active{transform:scale(.88);}
 .hidden{display:none!important;}
 
 /* スクリーンリーダー専用 */
@@ -467,7 +488,8 @@ html:has(.mask.on),body:has(.mask.on),html:has(#viewer.on),body:has(#viewer.on){
   <div class="empty hidden" id="empty">
     <div class="e">麺帳</div>
     <div class="t">まだ記録がないよ</div>
-    <div class="d">食べた麺を記録してみよう。<br>ラーメンもうどんもパスタも、まとめて残せます。</div>
+    <div class="d">まずは一杯、気軽に記録してみよう。<br>ラーメンもうどんもパスタも、まとめて残せます。</div>
+    <button class="empty-cta" id="emptyCta" type="button">＋ 最初の一杯を記録</button>
   </div>
   </main>
 </div>
@@ -506,7 +528,7 @@ html:has(.mask.on),body:has(.mask.on),html:has(#viewer.on),body:has(#viewer.on){
 
   <div class="field">
     <label id="starLabel">評価</label>
-    <div class="star-pick" id="starPick" role="group" aria-labelledby="starLabel">
+    <div class="star-pick" id="starPick" role="radiogroup" aria-labelledby="starLabel">
       <span data-v="1">★</span><span data-v="2">★</span><span data-v="3">★</span><span data-v="4">★</span><span data-v="5">★</span>
     </div>
   </div>
@@ -779,7 +801,20 @@ function render(){
   items=sortItems(items)
   if(records.length===0){$('empty').classList.remove('hidden');$('list').innerHTML='';return}
   $('empty').classList.add('hidden')
-  if(items.length===0){$('list').innerHTML='<div class="list-hint">該当する記録がないよ</div>';return}
+  if(items.length===0){
+    // 検索/フィルタ結果0件: 状況文＋「条件をクリア」アクション（filter/activeTag/query をリセット）
+    const hasCond=(filter!=='すべて')||activeTag||query
+    $('list').innerHTML='<div class="no-result">'
+      +'<div class="nr-t">'+(hasCond?'条件に合う記録はなかったよ':'該当する記録がないよ')+'</div>'
+      +(hasCond?'<div class="nr-d">絞り込みや検索を見直すか、条件をクリアしてみよう。</div>'
+        +'<button type="button" class="nr-clear" id="nrClear">条件をクリア</button>':'')
+      +'</div>'
+    if(hasCond){
+      const b=$('nrClear')
+      if(b)b.onclick=()=>{filter='すべて';activeTag=null;query='';$('search').value='';withVT(()=>render())}
+    }
+    return
+  }
   $('list').innerHTML='<div class="list-hint">タップで詳細 ・ 左スワイプ→削除ボタン</div>'+items.map(r=>`
     <div class="card-wrap">
       <div class="card-del">削除</div>
@@ -938,19 +973,81 @@ function renderTagChips(){
 }
 
 // ===== 種類グリッド =====
-$('typeGrid').innerHTML=TYPES.map(t=>`<div class="type-opt" data-t="${t}">${t}</div>`).join('')
-$('typeGrid').querySelectorAll('.type-opt').forEach(el=>el.onclick=()=>{
-  formType=el.dataset.t
-  $('typeGrid').querySelectorAll('.type-opt').forEach(x=>x.classList.toggle('on',x.dataset.t===formType))
+$('typeGrid').setAttribute('role','radiogroup')
+$('typeGrid').innerHTML=TYPES.map((t,i)=>`<div class="type-opt" role="radio" aria-checked="false" tabindex="${i===0?0:-1}" data-t="${t}">${t}</div>`).join('')
+// 選択を集約（クリックもキーボードも同じここを呼ぶ＝ロジック二重化しない）
+function setType(t){
+  formType=t
+  const opts=[...$('typeGrid').querySelectorAll('.type-opt')]
+  opts.forEach(x=>{const on=x.dataset.t===formType;x.classList.toggle('on',on);x.setAttribute('aria-checked',on?'true':'false')})
+  // roving tabindex: 選択中（未選択なら先頭）だけ Tab 到達点に
+  const focusT=formType||(opts[0]&&opts[0].dataset.t)
+  opts.forEach(x=>{x.tabIndex=(x.dataset.t===focusT)?0:-1})
   renderTagChips() // ジャンルに応じて専用タグを出す
+}
+// .on クラスから aria-checked / roving tabindex を同期（openAdd/openEdit が直接 .on を操作するため）
+function syncTypeAria(){
+  const opts=[...$('typeGrid').querySelectorAll('.type-opt')]
+  opts.forEach(x=>x.setAttribute('aria-checked',x.classList.contains('on')?'true':'false'))
+  const sel=opts.find(x=>x.classList.contains('on'))
+  const focusEl=sel||opts[0]
+  opts.forEach(x=>{x.tabIndex=(x===focusEl)?0:-1})
+}
+$('typeGrid').querySelectorAll('.type-opt').forEach(el=>el.onclick=()=>{setType(el.dataset.t);el.focus()})
+// キーボード層（左右上下で移動＝即選択・Home/End・Enter/Space で確定）
+$('typeGrid').addEventListener('keydown',e=>{
+  const opts=[...$('typeGrid').querySelectorAll('.type-opt')]
+  let i=opts.findIndex(x=>x.dataset.t===formType); if(i<0)i=0
+  let ni=null
+  switch(e.key){
+    case 'ArrowRight':case 'ArrowDown':ni=Math.min(opts.length-1,i+1);break
+    case 'ArrowLeft':case 'ArrowUp':ni=Math.max(0,i-1);break
+    case 'Home':ni=0;break
+    case 'End':ni=opts.length-1;break
+    case 'Enter':case ' ':case 'Spacebar':ni=i;break
+    default:return
+  }
+  e.preventDefault();const tgt=opts[ni];if(tgt){setType(tgt.dataset.t);tgt.focus()}
 })
 
 // 日付を手動で変えたら EXIF で上書きしない
 $('f-date').oninput=()=>{dateTouched=true}
 
 // ===== 星 =====
-$('starPick').querySelectorAll('span').forEach(el=>el.onclick=()=>{formStars=+el.dataset.v;paintStars()})
-function paintStars(){$('starPick').querySelectorAll('span').forEach(s=>s.classList.toggle('on',+s.dataset.v<=formStars))}
+// 内部処理は setStars に集約。クリックもキーボードも同じここを呼ぶ（ロジック二重化しない）。
+function setStars(v){formStars=Math.max(0,Math.min(5,v|0));paintStars()}
+;(()=>{
+  const spans=[...$('starPick').querySelectorAll('span')]
+  // 静的な role / ラベル付与（radiogroup の各 radio）
+  spans.forEach(el=>{el.setAttribute('role','radio');el.setAttribute('aria-label',el.dataset.v+'つ星')})
+  // クリック: 既存どおり値を確定（同じ内部処理を呼ぶだけ）
+  spans.forEach(el=>el.addEventListener('click',()=>{setStars(+el.dataset.v);el.focus()}))
+  // キーボード層（左右/Home/End で増減・Enter/Space で確定。WCAG radiogroup）
+  $('starPick').addEventListener('keydown',e=>{
+    const cur=formStars||1
+    let v=null
+    switch(e.key){
+      case 'ArrowRight':case 'ArrowUp':v=Math.min(5,cur+1);break
+      case 'ArrowLeft':case 'ArrowDown':v=Math.max(1,cur-1);break
+      case 'Home':v=1;break
+      case 'End':v=5;break
+      case 'Enter':case ' ':case 'Spacebar':v=cur;break
+      default:return
+    }
+    e.preventDefault();setStars(v)
+    const tgt=spans.find(s=>+s.dataset.v===v);if(tgt)tgt.focus()
+  })
+})()
+function paintStars(){
+  $('starPick').querySelectorAll('span').forEach(s=>{
+    const v=+s.dataset.v, on=v<=formStars
+    s.classList.toggle('on',on)
+    s.setAttribute('aria-checked',on?'true':'false')
+    // roving tabindex: 選択値（未選択なら先頭）だけ Tab 到達点にする
+    const focusV=formStars||1
+    s.tabIndex=(v===focusV)?0:-1
+  })
+}
 
 // ===== 写真 (複数 / 撮影・アルバム / EXIFで日付自動) =====
 async function handlePhotoFile(file){
@@ -1017,6 +1114,7 @@ function openAdd(){
   $('f-menu').value='';$('f-shop').value='';$('f-price').value='';$('f-memo').value=''
   $('f-date').value=todayStr()
   $('typeGrid').querySelectorAll('.type-opt').forEach(x=>x.classList.remove('on'))
+  syncTypeAria()
   paintStars();resetPhotoUI();renderTagChips()
   $('shopResults').classList.remove('on');paintShopLoc()
   $('delBtn').classList.add('hidden')
@@ -1035,6 +1133,7 @@ async function openEdit(id){
   $('f-menu').value=r.menu||'';$('f-shop').value=r.shop||''
   $('f-price').value=r.price||'';$('f-memo').value=r.memo||'';$('f-date').value=r.date||todayStr()
   $('typeGrid').querySelectorAll('.type-opt').forEach(x=>x.classList.toggle('on',x.dataset.t===formType))
+  syncTypeAria()
   paintStars();paintPhoto();renderTagChips()
   $('shopResults').classList.remove('on');paintShopLoc()
   $('delBtn').classList.remove('hidden')
@@ -1046,6 +1145,8 @@ function showSheet(){$('mask').classList.add('on');$('sheet').classList.add('on'
 function hideSheet(){$('mask').classList.remove('on');$('sheet').classList.remove('on')}
 $('mask').onclick=hideSheet
 $('fab').onclick=openAdd
+// 空状態のオンボーディングCTA: FABと同じ openAdd を呼ぶ（先にやってみるを促す）
+;(()=>{const ec=$('emptyCta');if(ec)ec.onclick=openAdd})()
 
 // インラインエラー制御（f-menu 用）。toast は補助、インラインが主。
 function setMenuError(msg){
