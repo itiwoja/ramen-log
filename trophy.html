@@ -2,7 +2,10 @@
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self'; connect-src 'self' https://nominatim.openstreetmap.org; object-src 'none'; base-uri 'self'; form-action 'self'; upgrade-insecure-requests">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=M+PLUS+2:wght@400;500;700;800&display=swap" rel="stylesheet">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; img-src 'self' data: blob:; font-src 'self' https://fonts.gstatic.com; connect-src 'self' https://nominatim.openstreetmap.org; object-src 'none'; base-uri 'self'; form-action 'self'; upgrade-insecure-requests">
 <style id="cjg">html{visibility:hidden}</style>
 <script>if(self===top){document.documentElement.style.visibility='visible'}else{try{top.location=self.location}catch(e){}}</script>
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no">
@@ -60,7 +63,7 @@
   --yellow:var(--md-star);
   --star-off:var(--md-outline-variant);
   --focus:var(--md-primary);
-  --font-sys:"Noto Sans JP","Hiragino Sans","Hiragino Kaku Gothic ProN",system-ui,-apple-system,sans-serif;
+  --font-sys:"M PLUS 2","Noto Sans JP","Hiragino Sans","Hiragino Kaku Gothic ProN",system-ui,-apple-system,sans-serif;
   --r-xs:4px;--r-sm:8px;--r-md:12px;--r-lg:16px;--r-xl:28px;--r-full:999px;
   --r-card:var(--r-lg);--r-ctl:var(--r-md);--r-chip:var(--r-full);
 }
