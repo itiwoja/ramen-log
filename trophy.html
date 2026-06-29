@@ -6,8 +6,8 @@
 <style id="cjg">html{visibility:hidden}</style>
 <script>if(self===top){document.documentElement.style.visibility='visible'}else{try{top.location=self.location}catch(e){}}</script>
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no">
-<meta name="theme-color" content="#F2F2F7" media="(prefers-color-scheme:light)">
-<meta name="theme-color" content="#000000" media="(prefers-color-scheme:dark)">
+<meta name="theme-color" content="#FFF8F5" media="(prefers-color-scheme:light)">
+<meta name="theme-color" content="#19120D" media="(prefers-color-scheme:dark)">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <link rel="manifest" href="manifest.webmanifest">
@@ -27,53 +27,68 @@
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
 
 :root{
-  /* --- HIG セマンティックカラー（Light）: index.html と同一 --- */
-  --label:#1C1C1E;
-  --secondary-label:rgba(60,60,67,.6);
-  --tertiary-label:rgba(60,60,67,.45);
-  --bg:#F2F2F7;            /* 純白回避 */
-  --bg-elevated:#FFFFFF;
-  --separator:rgba(60,60,67,.29);
-  --separator-weak:rgba(60,60,67,.14);
-  --fill:rgba(118,118,128,.12);
-  --fill-2:rgba(118,118,128,.08);
-  --tint:#B85C1E;                    /* 醤油の琥珀（systemBlueの代わり） */
-  --tint-weak:rgba(184,92,30,.12);
-  --on-tint:#FFFFFF;
-  --red:#FF3B30;
-  --green:#34C759;
-  --yellow:#FFB300;                  /* ★相当の強調 */
-  --star-off:rgba(60,60,67,.22);
-  --focus:#B85C1E;
-  --font-sys:-apple-system,"SF Pro Text","SF Pro Display","Hiragino Kaku Gothic ProN","Hiragino Sans",system-ui,sans-serif;
-  --r-card:14px;--r-ctl:12px;--r-chip:999px;
+  /* === M3 カラーロール（Light・暖色シード #8F4E00）: index.html と同一 === */
+  --md-primary:#8F4E00; --md-on-primary:#FFFFFF;
+  --md-primary-container:#FFDCC2; --md-on-primary-container:#2E1500;
+  --md-secondary:#755844; --md-on-secondary:#FFFFFF;
+  --md-secondary-container:#FFDCC2; --md-on-secondary-container:#2A1706;
+  --md-tertiary:#5F6234; --md-on-tertiary:#FFFFFF;
+  --md-tertiary-container:#E5E8AD; --md-on-tertiary-container:#1B1D00;
+  --md-error:#BA1A1A; --md-on-error:#FFFFFF;
+  --md-error-container:#FFDAD6; --md-on-error-container:#410002;
+  --md-surface:#FFF8F5; --md-on-surface:#211A15; --md-on-surface-variant:#52443B;
+  --md-surface-container-lowest:#FFFFFF; --md-surface-container-low:#FFF1E9;
+  --md-surface-container:#FCEBE0; --md-surface-container-high:#F6E5DA;
+  --md-surface-container-highest:#F0E0D5;
+  --md-outline:#85736A; --md-outline-variant:#D7C3B7;
+  --md-star:#9C7207;
+
+  --label:var(--md-on-surface);
+  --secondary-label:var(--md-on-surface-variant);
+  --tertiary-label:var(--md-outline);
+  --bg:var(--md-surface);
+  --bg-elevated:var(--md-surface-container-low);
+  --separator:var(--md-outline-variant);
+  --separator-weak:var(--md-outline-variant);
+  --fill:var(--md-surface-container-high);
+  --fill-2:var(--md-surface-container);
+  --tint:var(--md-primary);
+  --tint-weak:var(--md-primary-container);
+  --on-tint:var(--md-on-primary);
+  --red:var(--md-error);
+  --green:#2E6B3E;
+  --yellow:var(--md-star);
+  --star-off:var(--md-outline-variant);
+  --focus:var(--md-primary);
+  --font-sys:"Noto Sans JP","Hiragino Sans","Hiragino Kaku Gothic ProN",system-ui,-apple-system,sans-serif;
+  --r-xs:4px;--r-sm:8px;--r-md:12px;--r-lg:16px;--r-xl:28px;--r-full:999px;
+  --r-card:var(--r-lg);--r-ctl:var(--r-md);--r-chip:var(--r-full);
 }
 @media (prefers-color-scheme:dark){
   :root{
-    --label:#FFFFFF;
-    --secondary-label:rgba(235,235,245,.6);
-    --tertiary-label:rgba(235,235,245,.45);
-    --bg:#000000;                    /* iOS標準として可 */
-    --bg-elevated:#1C1C1E;
-    --separator:rgba(84,84,88,.65);
-    --separator-weak:rgba(84,84,88,.4);
-    --fill:rgba(118,118,128,.24);
-    --fill-2:rgba(118,118,128,.16);
-    --tint:#F0A35E;
-    --tint-weak:rgba(240,163,94,.18);
-    --on-tint:#1C1C1E;
-    --red:#FF453A;
-    --green:#30D158;
-    --yellow:#FFD426;
-    --star-off:rgba(235,235,245,.25);
-    --focus:#F0A35E;
+    --md-primary:#FFB77C; --md-on-primary:#4A2800;
+    --md-primary-container:#6C3A00; --md-on-primary-container:#FFDCC2;
+    --md-secondary:#E4BFA8; --md-on-secondary:#422B1B;
+    --md-secondary-container:#5B4130; --md-on-secondary-container:#FFDCC2;
+    --md-tertiary:#C9CC93; --md-on-tertiary:#31340A;
+    --md-tertiary-container:#474A1F; --md-on-tertiary-container:#E5E8AD;
+    --md-error:#FFB4AB; --md-on-error:#690005;
+    --md-error-container:#93000A; --md-on-error-container:#FFDAD6;
+    --md-surface:#19120D; --md-on-surface:#F0E0D5; --md-on-surface-variant:#D7C3B7;
+    --md-surface-container-lowest:#130C08; --md-surface-container-low:#211A14;
+    --md-surface-container:#261D17; --md-surface-container-high:#312720;
+    --md-surface-container-highest:#3C322B;
+    --md-outline:#9F8D82; --md-outline-variant:#52443B;
+    --md-star:#F4C95D;
+    --green:#7CD58F;
   }
 }
 
 html,body{height:100%;}
+html{background-color:var(--bg);}
 body{font-family:var(--font-sys);color:var(--label);background-color:var(--bg);
   min-height:100dvh;overflow-x:hidden;-webkit-font-smoothing:antialiased;
-  font-size:17px;line-height:1.45;}
+  font-size:16px;line-height:1.5;letter-spacing:.01em;}
 .wrap{max-width:520px;margin:0 auto;
   padding:calc(env(safe-area-inset-top) + 8px) 16px calc(env(safe-area-inset-bottom) + 40px);}
 
@@ -83,32 +98,32 @@ body{font-family:var(--font-sys);color:var(--label);background-color:var(--bg);
   *,*::before,*::after{animation:none!important;transition:none!important;scroll-behavior:auto!important;}
 }
 
-/* ===== back link（iOS ナビ戻る相当・44px標的） ===== */
+/* ===== back link（M3・48dp標的） ===== */
 .back{display:inline-flex;align-items:center;gap:3px;
-  min-height:44px;padding:4px 4px 4px 0;margin:0 0 2px -2px;
-  font-size:17px;font-weight:400;color:var(--tint);
+  min-height:48px;padding:4px 4px 4px 0;margin:0 0 2px -2px;
+  font-size:15px;font-weight:600;color:var(--md-primary);
   text-decoration:none;letter-spacing:.1px;
   transition:opacity .15s ease;}
 .back::before{content:"\2039";font-size:26px;line-height:1;font-weight:500;margin-top:-1px;}
 .back:hover{opacity:.7;}
 .back:active{opacity:.45;}
 
-/* ===== Large Title「トロフィー」 ===== */
-.title{font-size:34px;line-height:41px;font-weight:700;color:var(--label);
-  letter-spacing:.4px;margin:2px 0 0;}
+/* ===== Headline「トロフィー」（anti-ai: 900ワードマーク） ===== */
+.title{font-size:32px;line-height:40px;font-weight:900;color:var(--md-on-surface);
+  letter-spacing:-.01em;margin:2px 0 0;}
 
-/* ===== スコア（インセットグループ） ===== */
-.score-card{background:var(--bg-elevated);border-radius:var(--r-card);
-  border:1px solid var(--separator-weak);box-shadow:0 1px 2px rgba(0,0,0,.04);
+/* ===== スコア（M3 elevated カード） ===== */
+.score-card{background:var(--md-surface-container-low);border-radius:var(--r-lg);
+  border:1px solid var(--md-outline-variant);
   padding:16px 16px 18px;margin:16px 0 10px;}
-.score{font-size:15px;font-weight:600;color:var(--secondary-label);
+.score{font-size:15px;font-weight:600;color:var(--md-on-surface-variant);
   letter-spacing:.2px;display:flex;align-items:baseline;gap:8px;}
-.score #score{font-size:22px;font-weight:700;color:var(--label);
+.score #score{font-size:22px;font-weight:700;color:var(--md-on-surface);
   font-variant-numeric:tabular-nums;letter-spacing:0;}
-.scorebar{height:10px;border-radius:var(--r-chip);background:var(--fill);
+.scorebar{height:10px;border-radius:var(--r-full);background:var(--md-surface-container-high);
   overflow:hidden;margin-top:13px;}
-.scorebar i{display:block;height:100%;background:var(--tint);
-  border-radius:var(--r-chip);transition:width .4s cubic-bezier(.16,1,.3,1);}
+.scorebar i{display:block;height:100%;background:var(--md-primary);
+  border-radius:var(--r-full);transition:width .4s var(--ease-decelerate,cubic-bezier(.05,.7,.1,1));}
 
 /* ===== グループ見出し（iOS グループドリスト ヘッダ） ===== */
 .group-h{display:flex;align-items:baseline;justify-content:space-between;gap:10px;
@@ -129,8 +144,7 @@ body{font-family:var(--font-sys);color:var(--label);background-color:var(--bg);
   height:1px;background:var(--separator-weak);}
 /* グループ見出しの直後（=グループ先頭行）: 上角丸＋上境界 */
 .group-h + .tr{border-top:1px solid var(--separator-weak);
-  border-top-left-radius:var(--r-card);border-top-right-radius:var(--r-card);
-  box-shadow:0 1px 2px rgba(0,0,0,.04);}
+  border-top-left-radius:var(--r-card);border-top-right-radius:var(--r-card);}
 /* グループ末尾行（次が .group-h）/ リスト最終行: 下角丸＋全幅境界・区切り線消す */
 .tr:has(+ .group-h),.tr:last-child{
   border-bottom:1px solid var(--separator-weak);
@@ -138,12 +152,12 @@ body{font-family:var(--font-sys);color:var(--label);background-color:var(--bg);
 .tr:has(+ .group-h)::after,.tr:last-child::after{display:none;}
 
 /* バッジ: 獲得=tint塗り / 未獲得=淡色アウトライン（色のみ依存しない: ✓ / 🔒 文字併用） */
-.tr-badge{width:38px;height:38px;flex-shrink:0;border-radius:10px;
+.tr-badge{width:38px;height:38px;flex-shrink:0;border-radius:var(--r-md);
   display:flex;align-items:center;justify-content:center;
   font-size:17px;font-weight:700;line-height:1;
-  background:var(--fill);color:var(--tertiary-label);
-  border:1.5px solid var(--separator-weak);}
-.tr.on .tr-badge{background:var(--tint);color:var(--on-tint);border-color:var(--tint);}
+  background:var(--md-surface-container-high);color:var(--md-on-surface-variant);
+  border:1.5px solid var(--md-outline-variant);}
+.tr.on .tr-badge{background:var(--md-primary);color:var(--md-on-primary);border-color:var(--md-primary);}
 
 .tr-body{flex:1;min-width:0;}
 .tr-title{font-size:17px;font-weight:600;color:var(--secondary-label);

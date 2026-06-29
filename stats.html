@@ -6,8 +6,8 @@
 <style id="cjg">html{visibility:hidden}</style>
 <script>if(self===top){document.documentElement.style.visibility='visible'}else{try{top.location=self.location}catch(e){}}</script>
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no">
-<meta name="theme-color" content="#F2F2F7" media="(prefers-color-scheme: light)">
-<meta name="theme-color" content="#000000" media="(prefers-color-scheme: dark)">
+<meta name="theme-color" content="#FFF8F5" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#19120D" media="(prefers-color-scheme: dark)">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -19,75 +19,89 @@
 <script src="achievements.js"></script>
 <style>
 /* ============================================================
-   麺帳 分析 — Apple HIG (iOS) reskin
-   Clarity / Deference / Depth。データが主役、UIシェルは控えめ。
-   セマンティック色トークン（Light/Dark）は index.html と同一。
-   tint=醤油の琥珀 #B85C1E。草/カレンダー/バーは tint 不透明度スケール。
+   麺帳 分析 — Material Design 3 reskin（index.html と同一トークン）
+   データが主役、UIシェルは控えめ。M3 26カラーロール(light/dark)。
+   primary=暖色シード #8F4E00。草/カレンダー/バーは primary 不透明度スケール。
    JS・id・class・データキーは一切変更していない（見た目層のみ）。
    ============================================================ */
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
 
 :root{
-  /* --- HIG セマンティックカラー（Light）: index.html と同一 --- */
-  --label:#1C1C1E;
-  --secondary-label:rgba(60,60,67,.6);
-  --tertiary-label:rgba(60,60,67,.45);
-  --bg:#F2F2F7;            /* 純白回避 */
-  --bg-elevated:#FFFFFF;
-  --separator:rgba(60,60,67,.29);
-  --separator-weak:rgba(60,60,67,.14);
-  --fill:rgba(118,118,128,.12);
-  --fill-2:rgba(118,118,128,.08);
-  --tint:#B85C1E;                    /* 醤油の琥珀（systemBlueの代わり） */
-  --tint-weak:rgba(184,92,30,.12);
-  --on-tint:#FFFFFF;
-  --red:#FF3B30;
-  --green:#34C759;
-  --yellow:#FFB300;                  /* ★評価 */
-  --star-off:rgba(60,60,67,.22);
-  --focus:#B85C1E;
-  /* 草/カレンダーの濃淡: tint(琥珀)の不透明度スケール */
-  --heat-0:var(--fill-2);
-  --heat-1:rgba(184,92,30,.22);
-  --heat-2:rgba(184,92,30,.42);
-  --heat-3:rgba(184,92,30,.66);
-  --heat-4:rgba(184,92,30,.92);
+  /* === M3 カラーロール（Light・暖色シード #8F4E00）: index.html と同一 === */
+  --md-primary:#8F4E00; --md-on-primary:#FFFFFF;
+  --md-primary-container:#FFDCC2; --md-on-primary-container:#2E1500;
+  --md-secondary:#755844; --md-on-secondary:#FFFFFF;
+  --md-secondary-container:#FFDCC2; --md-on-secondary-container:#2A1706;
+  --md-tertiary:#5F6234; --md-on-tertiary:#FFFFFF;
+  --md-tertiary-container:#E5E8AD; --md-on-tertiary-container:#1B1D00;
+  --md-error:#BA1A1A; --md-on-error:#FFFFFF;
+  --md-error-container:#FFDAD6; --md-on-error-container:#410002;
+  --md-surface:#FFF8F5; --md-on-surface:#211A15; --md-on-surface-variant:#52443B;
+  --md-surface-container-lowest:#FFFFFF; --md-surface-container-low:#FFF1E9;
+  --md-surface-container:#FCEBE0; --md-surface-container-high:#F6E5DA;
+  --md-surface-container-highest:#F0E0D5;
+  --md-outline:#85736A; --md-outline-variant:#D7C3B7;
+  --md-star:#9C7207;
+
+  --label:var(--md-on-surface);
+  --secondary-label:var(--md-on-surface-variant);
+  --tertiary-label:var(--md-outline);
+  --bg:var(--md-surface);
+  --bg-elevated:var(--md-surface-container-low);
+  --separator:var(--md-outline-variant);
+  --separator-weak:var(--md-outline-variant);
+  --fill:var(--md-surface-container-high);
+  --fill-2:var(--md-surface-container);
+  --tint:var(--md-primary);
+  --tint-weak:var(--md-primary-container);
+  --on-tint:var(--md-on-primary);
+  --red:var(--md-error);
+  --green:#2E6B3E;
+  --yellow:var(--md-star);
+  --star-off:var(--md-outline-variant);
+  --focus:var(--md-primary);
+  /* 草/カレンダーの濃淡: primary(#8F4E00)系の不透明度スケール（暖色ヒート） */
+  --heat-0:var(--md-surface-container);
+  --heat-1:rgba(143,78,0,.22);
+  --heat-2:rgba(143,78,0,.42);
+  --heat-3:rgba(143,78,0,.66);
+  --heat-4:rgba(143,78,0,.92);
   --on-heat-strong:#FFFFFF;          /* 濃いセル上のテキスト（lv2/lv3） */
-  --font-sys:-apple-system,"SF Pro Text","SF Pro Display","Hiragino Kaku Gothic ProN","Hiragino Sans",system-ui,sans-serif;
-  --r-card:14px;--r-ctl:12px;
+  --font-sys:"Noto Sans JP","Hiragino Sans","Hiragino Kaku Gothic ProN",system-ui,-apple-system,sans-serif;
+  --r-xs:4px;--r-sm:8px;--r-md:12px;--r-lg:16px;--r-xl:28px;--r-full:999px;
+  --r-card:var(--r-lg);--r-ctl:var(--r-md);
 }
 @media (prefers-color-scheme:dark){
   :root{
-    --label:#FFFFFF;
-    --secondary-label:rgba(235,235,245,.6);
-    --tertiary-label:rgba(235,235,245,.45);
-    --bg:#000000;                    /* iOS標準として可 */
-    --bg-elevated:#1C1C1E;
-    --separator:rgba(84,84,88,.65);
-    --separator-weak:rgba(84,84,88,.4);
-    --fill:rgba(118,118,128,.24);
-    --fill-2:rgba(118,118,128,.16);
-    --tint:#F0A35E;
-    --tint-weak:rgba(240,163,94,.18);
-    --on-tint:#1C1C1E;
-    --red:#FF453A;
-    --green:#30D158;
-    --yellow:#FFD426;
-    --star-off:rgba(235,235,245,.25);
-    --focus:#F0A35E;
-    --heat-0:var(--fill-2);
-    --heat-1:rgba(240,163,94,.26);
-    --heat-2:rgba(240,163,94,.46);
-    --heat-3:rgba(240,163,94,.68);
-    --heat-4:rgba(240,163,94,.95);
-    --on-heat-strong:#1C1C1E;
+    --md-primary:#FFB77C; --md-on-primary:#4A2800;
+    --md-primary-container:#6C3A00; --md-on-primary-container:#FFDCC2;
+    --md-secondary:#E4BFA8; --md-on-secondary:#422B1B;
+    --md-secondary-container:#5B4130; --md-on-secondary-container:#FFDCC2;
+    --md-tertiary:#C9CC93; --md-on-tertiary:#31340A;
+    --md-tertiary-container:#474A1F; --md-on-tertiary-container:#E5E8AD;
+    --md-error:#FFB4AB; --md-on-error:#690005;
+    --md-error-container:#93000A; --md-on-error-container:#FFDAD6;
+    --md-surface:#19120D; --md-on-surface:#F0E0D5; --md-on-surface-variant:#D7C3B7;
+    --md-surface-container-lowest:#130C08; --md-surface-container-low:#211A14;
+    --md-surface-container:#261D17; --md-surface-container-high:#312720;
+    --md-surface-container-highest:#3C322B;
+    --md-outline:#9F8D82; --md-outline-variant:#52443B;
+    --md-star:#F4C95D;
+    --green:#7CD58F;
+    --heat-0:var(--md-surface-container);
+    --heat-1:rgba(255,183,124,.26);
+    --heat-2:rgba(255,183,124,.46);
+    --heat-3:rgba(255,183,124,.68);
+    --heat-4:rgba(255,183,124,.95);
+    --on-heat-strong:#19120D;
   }
 }
 
 html,body{height:100%;}
+html{background-color:var(--bg);}
 body{font-family:var(--font-sys);color:var(--label);background-color:var(--bg);
   min-height:100dvh;overflow-x:hidden;-webkit-font-smoothing:antialiased;
-  font-size:17px;line-height:1.45;}
+  font-size:16px;line-height:1.5;letter-spacing:.01em;}
 .wrap{max-width:520px;margin:0 auto;padding:calc(env(safe-area-inset-top) + 8px) 16px calc(env(safe-area-inset-bottom) + 40px);}
 
 /* グローバル: フォーカスリング & reduced-motion (WCAG 2.4.7 / 2.3) */
@@ -97,18 +111,18 @@ body{font-family:var(--font-sys);color:var(--label);background-color:var(--bg);
 }
 
 /* ===== 戻る（iOS NavBar 風 back） ===== */
-.back{display:inline-flex;align-items:center;gap:2px;min-height:44px;
-  font-size:17px;font-weight:400;color:var(--tint);text-decoration:none;margin:0 -6px 2px;
+.back{display:inline-flex;align-items:center;gap:2px;min-height:48px;
+  font-size:15px;font-weight:600;color:var(--md-primary);text-decoration:none;margin:0 -6px 2px;
   padding:0 6px;border-radius:8px;}
 .back:active{opacity:.55;}
 
 /* ===== Large Title「分析」 ===== */
-.title{font-size:34px;line-height:41px;font-weight:700;color:var(--label);
-  letter-spacing:.4px;margin:2px 0 18px;}
+.title{font-size:32px;line-height:40px;font-weight:900;color:var(--md-on-surface);
+  letter-spacing:-.01em;margin:2px 0 18px;}
 
-/* ===== 概要 stats: インセットグループ風カード ===== */
-.stats{display:flex;background:var(--bg-elevated);border-radius:var(--r-card);
-  overflow:hidden;margin-bottom:22px;box-shadow:0 1px 2px rgba(0,0,0,.04);}
+/* ===== 概要 stats: M3 elevated カード（tonal） ===== */
+.stats{display:flex;background:var(--md-surface-container-low);border-radius:var(--r-lg);
+  overflow:hidden;margin-bottom:22px;border:1px solid var(--md-outline-variant);}
 .stat{flex:1;padding:16px 4px;text-align:center;position:relative;}
 .stat + .stat::before{content:'';position:absolute;left:0;top:14px;bottom:14px;width:1px;background:var(--separator-weak);}
 .stat .v{font-size:22px;font-weight:700;color:var(--label);line-height:1.1;font-variant-numeric:tabular-nums;}
@@ -119,8 +133,8 @@ body{font-family:var(--font-sys);color:var(--label);background-color:var(--bg);
    .sec 全体を 1 枚のインセットカードにする。.sec-h は枠外ラベル風に上へ出す。
    こうすることで、中身が単一ラッパ(#grass/#cal/.hall/.shops)でも
    複数の .bar-row 直下兄弟でも一貫してカード化される。 */
-.sec{margin-bottom:26px;background:var(--bg-elevated);border-radius:var(--r-card);
-  padding:16px;box-shadow:0 1px 2px rgba(0,0,0,.04);}
+.sec{margin-bottom:26px;background:var(--md-surface-container-low);border-radius:var(--r-lg);
+  padding:16px;border:1px solid var(--md-outline-variant);}
 .sec-h{font-size:13px;font-weight:600;letter-spacing:.3px;color:var(--secondary-label);
   text-transform:none;
   /* カード上端の外側にラベルを出す（iOS グループヘッダ風） */
@@ -140,8 +154,8 @@ body{font-family:var(--font-sys);color:var(--label);background-color:var(--bg);
 .bar-val small{color:var(--secondary-label);font-weight:400;font-size:13px;margin-left:1px;}
 
 /* ===== 連続記録 streaks: 分割インセットカード ===== */
-.streaks{display:flex;background:var(--bg-elevated);border-radius:var(--r-card);
-  overflow:hidden;box-shadow:0 1px 2px rgba(0,0,0,.04);}
+.streaks{display:flex;background:var(--md-surface-container-low);border-radius:var(--r-lg);
+  overflow:hidden;}
 .sk{flex:1;padding:16px 4px;text-align:center;position:relative;}
 .sk + .sk::before{content:'';position:absolute;left:0;top:14px;bottom:14px;width:1px;background:var(--separator-weak);}
 .sk-v{font-size:22px;font-weight:700;color:var(--label);font-variant-numeric:tabular-nums;}

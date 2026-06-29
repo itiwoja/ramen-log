@@ -6,8 +6,8 @@
 <style id="cjg">html{visibility:hidden}</style>
 <script>if(self===top){document.documentElement.style.visibility='visible'}else{try{top.location=self.location}catch(e){}}</script>
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no">
-<meta name="theme-color" content="#F2F2F7" media="(prefers-color-scheme: light)">
-<meta name="theme-color" content="#000000" media="(prefers-color-scheme: dark)">
+<meta name="theme-color" content="#FFF8F5" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#19120D" media="(prefers-color-scheme: dark)">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <link rel="manifest" href="manifest.webmanifest">
@@ -16,64 +16,77 @@
 <title>麺帳 用語辞典</title>
 <style>
 /* ============================================================
-   麺帳 用語辞典 — Apple HIG (iOS) reskin
-   Clarity / Deference / Depth。インセットグループ + システム書体。
-   セマンティック色トークン（Light/Dark）は index.html と同一。
+   麺帳 用語辞典 — Material Design 3 reskin（index.html と同一トークン）
+   M3 26カラーロール(light/dark)・Noto Sans JP・角丸スケール。
+   primary=暖色シード #8F4E00。
    JS・id・データ構造は一切変更していない（見た目層のみ）。
    ============================================================ */
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
 
 :root{
-  /* --- HIG セマンティックカラー（Light） --- */
-  --label:#1C1C1E;
-  --secondary-label:rgba(60,60,67,.6);
-  --tertiary-label:rgba(60,60,67,.45);
-  --bg:#F2F2F7;            /* 純白回避 */
-  --bg-elevated:#FFFFFF;
-  --separator:rgba(60,60,67,.29);
-  --separator-weak:rgba(60,60,67,.14);
-  --fill:rgba(118,118,128,.12);     /* tertiary system fill 相当 */
-  --fill-2:rgba(118,118,128,.08);
-  --tint:#B85C1E;                    /* 醤油の琥珀（systemBlueの代わり） */
-  --tint-weak:rgba(184,92,30,.12);
-  --tint-strong:#A0501A;             /* tint-weak 上で AA を満たす濃い琥珀 */
-  --on-tint:#FFFFFF;
-  --red:#FF3B30;
-  --green:#34C759;
-  --yellow:#FFB300;                  /* ★評価 */
-  --star-off:rgba(60,60,67,.22);
-  --muted:rgba(60,60,67,.78);        /* AA-safe 補助テキスト（bg上 5.2:1） */
-  --focus:#B85C1E;
-  --font-sys:-apple-system,"SF Pro Text","SF Pro Display","Hiragino Kaku Gothic ProN","Hiragino Sans",system-ui,sans-serif;
-  --r-card:14px;--r-sheet:14px;--r-ctl:12px;--r-chip:999px;
+  /* === M3 カラーロール（Light・暖色シード #8F4E00）: index.html と同一 === */
+  --md-primary:#8F4E00; --md-on-primary:#FFFFFF;
+  --md-primary-container:#FFDCC2; --md-on-primary-container:#2E1500;
+  --md-secondary:#755844; --md-on-secondary:#FFFFFF;
+  --md-secondary-container:#FFDCC2; --md-on-secondary-container:#2A1706;
+  --md-tertiary:#5F6234; --md-on-tertiary:#FFFFFF;
+  --md-tertiary-container:#E5E8AD; --md-on-tertiary-container:#1B1D00;
+  --md-error:#BA1A1A; --md-on-error:#FFFFFF;
+  --md-error-container:#FFDAD6; --md-on-error-container:#410002;
+  --md-surface:#FFF8F5; --md-on-surface:#211A15; --md-on-surface-variant:#52443B;
+  --md-surface-container-lowest:#FFFFFF; --md-surface-container-low:#FFF1E9;
+  --md-surface-container:#FCEBE0; --md-surface-container-high:#F6E5DA;
+  --md-surface-container-highest:#F0E0D5;
+  --md-outline:#85736A; --md-outline-variant:#D7C3B7;
+  --md-star:#9C7207;
+
+  --label:var(--md-on-surface);
+  --secondary-label:var(--md-on-surface-variant);
+  --tertiary-label:var(--md-outline);
+  --bg:var(--md-surface);
+  --bg-elevated:var(--md-surface-container-low);
+  --separator:var(--md-outline-variant);
+  --separator-weak:var(--md-outline-variant);
+  --fill:var(--md-surface-container-high);
+  --fill-2:var(--md-surface-container);
+  --tint:var(--md-primary);
+  --tint-weak:var(--md-primary-container);
+  --tint-strong:var(--md-primary);   /* primary は surface 上で AA(本文)を満たす */
+  --on-tint:var(--md-on-primary);
+  --red:var(--md-error);
+  --green:#2E6B3E;
+  --yellow:var(--md-star);
+  --star-off:var(--md-outline-variant);
+  --muted:var(--md-on-surface-variant);
+  --focus:var(--md-primary);
+  --font-sys:"Noto Sans JP","Hiragino Sans","Hiragino Kaku Gothic ProN",system-ui,-apple-system,sans-serif;
+  --r-xs:4px;--r-sm:8px;--r-md:12px;--r-lg:16px;--r-xl:28px;--r-full:999px;
+  --r-card:var(--r-lg);--r-sheet:var(--r-xl);--r-ctl:var(--r-md);--r-chip:var(--r-full);
 }
 @media (prefers-color-scheme:dark){
   :root{
-    --label:#FFFFFF;
-    --secondary-label:rgba(235,235,245,.6);
-    --tertiary-label:rgba(235,235,245,.45);
-    --bg:#000000;                    /* iOS標準として可 */
-    --bg-elevated:#1C1C1E;
-    --separator:rgba(84,84,88,.65);
-    --separator-weak:rgba(84,84,88,.4);
-    --fill:rgba(118,118,128,.24);
-    --fill-2:rgba(118,118,128,.16);
-    --tint:#F0A35E;
-    --tint-weak:rgba(240,163,94,.18);
-    --tint-strong:#F0A35E;             /* dark は tint で十分なコントラスト */
-    --on-tint:#1C1C1E;
-    --red:#FF453A;
-    --green:#30D158;
-    --yellow:#FFD426;
-    --star-off:rgba(235,235,245,.25);
-    --muted:rgba(235,235,245,.7);
-    --focus:#F0A35E;
+    --md-primary:#FFB77C; --md-on-primary:#4A2800;
+    --md-primary-container:#6C3A00; --md-on-primary-container:#FFDCC2;
+    --md-secondary:#E4BFA8; --md-on-secondary:#422B1B;
+    --md-secondary-container:#5B4130; --md-on-secondary-container:#FFDCC2;
+    --md-tertiary:#C9CC93; --md-on-tertiary:#31340A;
+    --md-tertiary-container:#474A1F; --md-on-tertiary-container:#E5E8AD;
+    --md-error:#FFB4AB; --md-on-error:#690005;
+    --md-error-container:#93000A; --md-on-error-container:#FFDAD6;
+    --md-surface:#19120D; --md-on-surface:#F0E0D5; --md-on-surface-variant:#D7C3B7;
+    --md-surface-container-lowest:#130C08; --md-surface-container-low:#211A14;
+    --md-surface-container:#261D17; --md-surface-container-high:#312720;
+    --md-surface-container-highest:#3C322B;
+    --md-outline:#9F8D82; --md-outline-variant:#52443B;
+    --md-star:#F4C95D;
+    --green:#7CD58F;
   }
 }
 
 html,body{height:100%;}
+html{background-color:var(--bg);}
 body{font-family:var(--font-sys);color:var(--label);background-color:var(--bg);
-  min-height:100dvh;-webkit-font-smoothing:antialiased;font-size:17px;line-height:1.45;}
+  min-height:100dvh;-webkit-font-smoothing:antialiased;font-size:16px;line-height:1.5;letter-spacing:.01em;}
 .wrap{max-width:520px;margin:0 auto;
   padding:calc(env(safe-area-inset-top) + 12px) 16px calc(env(safe-area-inset-bottom) + 40px);}
 
@@ -85,27 +98,27 @@ body{font-family:var(--font-sys);color:var(--label);background-color:var(--bg);
 @media (prefers-reduced-motion:no-preference){html{scroll-behavior:smooth;}}
 
 /* ===== back link（iOS の戻る） ===== */
-.back{display:inline-flex;align-items:center;gap:3px;min-height:44px;
-  font-size:17px;font-weight:400;color:var(--tint-strong);text-decoration:none;letter-spacing:.1px;}
+.back{display:inline-flex;align-items:center;gap:3px;min-height:48px;
+  font-size:15px;font-weight:600;color:var(--md-primary);text-decoration:none;letter-spacing:.1px;}
 .back:active{opacity:.5;}
 
 /* スクリーンリーダー専用（視覚的に非表示・WCAG 1.3.1 / 3.3.2） */
 .visually-hidden{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;
   clip:rect(0,0,0,0);white-space:nowrap;border:0;}
 
-/* ===== Large Title「麺帳 用語辞典」（ワードマーク・絵文字なし） ===== */
-.title{font-size:34px;line-height:41px;font-weight:700;color:var(--label);letter-spacing:.4px;margin-top:2px;}
+/* ===== Headline「麺帳 用語辞典」（anti-ai: 900ワードマーク・絵文字なし） ===== */
+.title{font-size:30px;line-height:38px;font-weight:900;color:var(--md-on-surface);letter-spacing:-.01em;margin-top:2px;}
 .sub{font-size:15px;color:var(--muted);margin-top:6px;line-height:1.5;letter-spacing:.1px;font-weight:400;}
 
-/* ===== 上部クイックジャンプ（iOS tinted チップ） ===== */
+/* ===== 上部クイックジャンプ（M3 assist chip） ===== */
 .nav{display:flex;gap:8px;overflow-x:auto;margin:18px -16px 4px;padding:0 16px 4px;scrollbar-width:none;}
 .nav::-webkit-scrollbar{display:none;}
-.nav-chip{flex-shrink:0;border:none;border-radius:var(--r-chip);padding:8px 16px;min-height:36px;
-  font-size:15px;font-weight:600;color:var(--label);background:var(--fill);cursor:pointer;
+.nav-chip{flex-shrink:0;border:1px solid var(--md-outline);border-radius:var(--r-sm);padding:7px 16px;min-height:36px;
+  font-size:14px;font-weight:600;color:var(--md-on-surface-variant);background:transparent;cursor:pointer;
   white-space:nowrap;font-family:inherit;letter-spacing:.1px;
-  transition:background .15s ease,transform .1s ease,color .15s ease;}
-.nav-chip:hover{background:var(--fill-2);}
-.nav-chip:active{background:var(--tint);color:var(--on-tint);transform:scale(.96);}
+  transition:background .15s var(--ease-standard,ease),transform .1s ease,color .15s ease,border-color .15s ease;}
+.nav-chip:hover{background:var(--md-surface-container-high);}
+.nav-chip:active{background:var(--md-secondary-container);color:var(--md-on-secondary-container);border-color:transparent;transform:scale(.96);}
 
 /* ===== 検索（iOS の角丸サーチフィールド） ===== */
 .search-field{position:relative;margin:14px 0 4px;}
@@ -115,11 +128,12 @@ body{font-family:var(--font-sys);color:var(--label);background-color:var(--bg);
   -webkit-mask:no-repeat center/contain;mask:no-repeat center/contain;
   -webkit-mask-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='black' d='M10 2a8 8 0 015.29 13.71l5 5-1.42 1.42-5-5A8 8 0 1110 2zm0 2a6 6 0 100 12 6 6 0 000-12z'/%3E%3C/svg%3E");
   mask-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='black' d='M10 2a8 8 0 015.29 13.71l5 5-1.42 1.42-5-5A8 8 0 1110 2zm0 2a6 6 0 100 12 6 6 0 000-12z'/%3E%3C/svg%3E");}
-.search{width:100%;background:var(--fill);border:1px solid transparent;border-radius:10px;
-  padding:11px 14px 11px 38px;font-family:inherit;font-size:17px;color:var(--label);
-  -webkit-appearance:none;appearance:none;transition:border-color .15s ease,background .15s ease;}
-.search::placeholder{color:var(--secondary-label);}
-.search:focus{outline:none;border-color:var(--tint);background:var(--bg-elevated);}
+.search{width:100%;background:var(--md-surface-container-high);border:none;
+  border-bottom:1px solid var(--md-on-surface-variant);border-radius:var(--r-xs) var(--r-xs) 0 0;
+  padding:12px 14px 12px 38px;font-family:inherit;font-size:16px;color:var(--md-on-surface);min-height:48px;
+  -webkit-appearance:none;appearance:none;transition:border-color .15s var(--ease-standard,ease),box-shadow .15s ease;}
+.search::placeholder{color:var(--md-outline);}
+.search:focus{outline:none;border-bottom-color:var(--md-primary);box-shadow:inset 0 -1px 0 0 var(--md-primary);}
 .count{font-size:13px;color:var(--muted);margin:10px 2px 6px;letter-spacing:.1px;
   font-variant-numeric:tabular-nums;}
 
@@ -142,8 +156,8 @@ body{font-family:var(--font-sys);color:var(--label);background-color:var(--bg);
 .term-h{display:flex;align-items:baseline;gap:9px;flex-wrap:wrap;}
 .term-w{font-size:17px;font-weight:600;color:var(--label);letter-spacing:.1px;}      /* Headline */
 .term-r{font-size:13px;color:var(--muted);font-weight:400;letter-spacing:.1px;}      /* 読み・AA */
-.term-tag{font-size:11px;font-weight:600;letter-spacing:.3px;color:var(--tint-strong);background:var(--tint-weak);
-  padding:2px 8px;border-radius:6px;}
+.term-tag{font-size:11px;font-weight:600;letter-spacing:.3px;color:var(--md-on-primary-container);background:var(--md-primary-container);
+  padding:2px 8px;border-radius:var(--r-sm);}
 .term-d{font-size:15px;line-height:1.6;color:var(--label);margin-top:5px;letter-spacing:.1px;}  /* 本文 */
 .term-d b{color:var(--label);font-weight:700;}
 
