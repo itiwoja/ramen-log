@@ -153,6 +153,25 @@ body{font-family:var(--font-sys);color:var(--label);background-color:var(--bg);
 .streak-line{display:none;text-align:center;font-size:15px;font-weight:600;color:var(--md-on-tertiary-container);
   background:var(--md-tertiary-container);border-radius:var(--r-md);padding:12px;margin-bottom:16px;letter-spacing:.2px;}
 
+/* バックアップ・リマインダー: tertiary-container の注意バナー（M3） */
+.bk-banner{display:flex;align-items:center;gap:12px;background:var(--md-tertiary-container);color:var(--md-on-tertiary-container);
+  border-radius:var(--r-md);padding:12px 14px;margin-bottom:16px;letter-spacing:.2px;
+  animation:cardIn var(--dur) var(--ease-spring) both;}
+.bk-banner-ic{font-size:22px;line-height:1;flex-shrink:0;}
+.bk-banner-body{flex:1;min-width:0;}
+.bk-banner-title{font-size:14px;font-weight:700;}
+.bk-banner-text{font-size:12.5px;opacity:.85;margin-top:2px;line-height:1.5;}
+.bk-banner-act{flex-shrink:0;border:none;background:var(--md-on-tertiary-container);color:var(--md-tertiary-container);
+  border-radius:var(--r-full);padding:9px 16px;font-family:inherit;font-size:13px;font-weight:700;cursor:pointer;min-height:40px;
+  transition:filter var(--dur-fast) var(--ease-standard),transform var(--dur-fast) var(--ease-spring);}
+.bk-banner-act:hover{filter:brightness(1.08);}
+.bk-banner-act:active{transform:scale(.96);}
+.bk-banner-x{flex-shrink:0;border:none;background:none;color:var(--md-on-tertiary-container);opacity:.7;
+  width:44px;height:44px;margin:-6px -8px -6px -4px;border-radius:50%;font-size:14px;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;
+  transition:opacity var(--dur-fast) var(--ease-standard),background var(--dur-fast) var(--ease-standard);}
+.bk-banner-x:hover{opacity:1;}
+
 /* ===== filter / tag: M3 filter chip（state layer・選択=secondary-container） ===== */
 .filters{display:flex;gap:8px;overflow-x:auto;padding-bottom:4px;margin-bottom:14px;scrollbar-width:none;}
 .filters::-webkit-scrollbar{display:none;}
@@ -439,8 +458,14 @@ body{font-family:var(--font-sys);color:var(--label);background-color:var(--bg);
 #toast{position:fixed;left:50%;bottom:calc(env(safe-area-inset-bottom) + 92px);transform:translateX(-50%) translateY(20px);
   background:var(--md-inverse-surface);color:var(--md-inverse-on-surface);font-size:14px;font-weight:500;padding:14px 20px;border-radius:var(--r-xs);
   opacity:0;transition:opacity .3s var(--ease-standard),transform .3s var(--ease-standard);z-index:99;pointer-events:none;letter-spacing:.1px;
-  box-shadow:0 4px 8px rgba(0,0,0,.2);max-width:88vw;text-align:center;}
+  box-shadow:0 4px 8px rgba(0,0,0,.2);max-width:88vw;text-align:center;
+  display:flex;align-items:center;gap:8px;justify-content:center;}
 #toast.on{opacity:1;transform:translateX(-50%) translateY(0);}
+/* 操作付き Snackbar のアクション（M3 inverse-primary テキストボタン）。親が pointer-events:none でも自身は auto で押下可 */
+.toast-act{flex-shrink:0;background:none;border:none;color:var(--md-inverse-primary);font-family:inherit;
+  font-size:14px;font-weight:700;letter-spacing:.3px;padding:8px;margin:-8px -8px -8px 4px;border-radius:var(--r-xs);
+  cursor:pointer;pointer-events:auto;min-height:40px;transition:filter var(--dur-fast) var(--ease-standard);}
+.toast-act:active{filter:brightness(.85);}
 
 #celebrate{position:fixed;inset:0;pointer-events:none;z-index:120;overflow:hidden;}
 .cele{position:absolute;bottom:42%;animation:celePop 1.1s ease-out forwards;}
@@ -541,6 +566,15 @@ html:has(.mask.on),body:has(.mask.on),html:has(#viewer.on),body:has(#viewer.on){
   </header>
 
   <main>
+  <div id="backupBanner" class="bk-banner hidden" role="status">
+    <span class="bk-banner-ic" aria-hidden="true">📦</span>
+    <div class="bk-banner-body">
+      <div class="bk-banner-title">バックアップしませんか？</div>
+      <div class="bk-banner-text" id="bkBannerText"></div>
+    </div>
+    <button class="bk-banner-act" id="bkBannerExport" type="button">書き出す</button>
+    <button class="bk-banner-x" id="bkBannerDismiss" type="button" aria-label="通知を閉じる">✕</button>
+  </div>
   <div class="stats" aria-label="記録の概要">
     <div class="stat"><div class="v" id="st-count">0</div><div class="l">杯</div></div>
     <div class="stat"><div class="v" id="st-avg">–</div><div class="l">平均評価</div></div>
@@ -664,7 +698,7 @@ html:has(.mask.on),body:has(.mask.on),html:has(#viewer.on),body:has(#viewer.on){
 <div id="celebrate" aria-hidden="true"></div>
 <div id="viewer"><button id="viewerClose" type="button" aria-label="閉じる">✕</button><img id="viewerImg" alt="記録した写真の拡大表示"></div>
 
-<div id="toast" role="status" aria-live="polite"></div>
+<div id="toast" role="status" aria-live="polite"><span id="toastMsg"></span><button id="toastAction" type="button" class="toast-act hidden"></button></div>
 
 <script>
 // ===== データ =====
@@ -1003,12 +1037,34 @@ function attachCard(el){
   el.addEventListener('click',()=>{ if(hor)return; if(open){setOpen(false);return} openDetail(id) })
   if(del) del.onclick=()=>{ if(open) deleteRecord(id) }
 }
-function deleteRecord(id){
-  const r=records.find(x=>x.id===id); const n=r?(r.photos||0):0
-  records=records.filter(x=>x.id!==id);save();render();toast('削除したよ')
+// 削除は「猶予付き」。すぐには写真(IDB)を消さず、Snackbarの「元に戻す」で復元できる。
+// 猶予中に別の削除が来たら、先の削除を確定してから新しい削除を受け付ける（Snackbarは1つずつ）。
+let pendingDelete=null
+function purgePhotos(id,n){
   for(let i=0;i<n;i++){dropPhotoCache(pkey(id,i));idbDel(pkey(id,i)).catch(()=>{})}
   dropPhotoCache(id);idbDel(id).catch(()=>{}) // 旧キーも掃除
 }
+function commitDelete(){
+  if(!pendingDelete)return
+  const pd=pendingDelete;pendingDelete=null
+  purgePhotos(pd.rec.id,pd.rec.photos||0)   // ここで初めて写真を物理削除
+}
+function deleteRecord(id){
+  const idx=records.findIndex(x=>x.id===id);if(idx<0)return
+  const rec=records[idx]
+  commitDelete()                             // 直前の未確定削除を確定させてから
+  records=records.filter(x=>x.id!==id);save();render()
+  pendingDelete={rec,idx}
+  toast('削除したよ',{label:'元に戻す',onAction:undoDelete,onExpire:commitDelete})
+}
+function undoDelete(){
+  if(!pendingDelete)return
+  const pd=pendingDelete;pendingDelete=null
+  records.splice(Math.min(pd.idx,records.length),0,pd.rec)  // 元の位置へ戻す（写真はIDBに残っている）
+  save();render();toast('戻したよ')
+}
+// タブを閉じる際は未確定の削除を確定（写真の孤児化を最小化）
+window.addEventListener('pagehide',commitDelete)
 
 // シート: 下スワイプで閉じる
 function makeSwipeable(sheet,onClose){
@@ -1301,6 +1357,25 @@ $('delBtn').onclick=()=>{
 function todayStr(){const d=new Date();return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`}
 
 // ===== バックアップ / 復元 =====
+// リマインダー: 最終バックアップから一定日数でバナーを出す。初回は基準日時を now にして即ナグを避ける。
+const BACKUP_KEY='mencho.lastBackup'          // 実際にバックアップした日時(ISO)
+const BACKUP_BASE_KEY='mencho.backupBaseline' // 初回起動の基準日時(ISO)。初回ナグ抑制用
+const BACKUP_SNOOZE_KEY='mencho.backupSnooze' // 「閉じる」を押した日時(ISO)
+const BACKUP_REMIND_DAYS=30                    // これ以上バックアップが無いと表示
+const BACKUP_SNOOZE_DAYS=7                     // 閉じたらこの日数は再表示しない
+function daysSince(iso){const t=iso?Date.parse(iso):NaN;return isNaN(t)?Infinity:(Date.now()-t)/86400000}
+function hideBackupBanner(){const b=$('backupBanner');if(b)b.classList.add('hidden')}
+function maybeShowBackupBanner(){
+  const b=$('backupBanner');if(!b||!records.length)return                              // 記録が無ければ不要
+  if(daysSince(localStorage.getItem(BACKUP_SNOOZE_KEY))<BACKUP_SNOOZE_DAYS)return       // スヌーズ中
+  const ref=localStorage.getItem(BACKUP_KEY)||localStorage.getItem(BACKUP_BASE_KEY)     // 実バックアップ or 基準日時
+  if(daysSince(ref)<BACKUP_REMIND_DAYS)return                                           // まだ猶予内
+  const last=localStorage.getItem(BACKUP_KEY)
+  $('bkBannerText').textContent=last?`最後のバックアップから${Math.floor(daysSince(last))}日たっています`:'バックアップをまだ作成していません'
+  b.classList.remove('hidden')
+}
+;(()=>{const be=$('bkBannerExport');if(be)be.onclick=doExport
+  const bd=$('bkBannerDismiss');if(bd)bd.onclick=()=>{localStorage.setItem(BACKUP_SNOOZE_KEY,new Date().toISOString());hideBackupBanner()}})()
 function hideBackup(){$('bkMask').classList.remove('on');$('bkSheet').classList.remove('on')}
 async function showStoreStatus(){
   const el=$('storeStatus');if(!el)return
@@ -1313,7 +1388,7 @@ async function showStoreStatus(){
 }
 $('gear').onclick=()=>{$('bkMask').classList.add('on');$('bkSheet').classList.add('on');showStoreStatus()}
 $('bkMask').onclick=hideBackup
-$('exportBtn').onclick=async()=>{
+async function doExport(){
   toast('バックアップ作成中…')
   // 写真(IDB)も dataURL として同梱し、単体で復元できるバックアップにする
   const out=[]
@@ -1330,8 +1405,11 @@ $('exportBtn').onclick=async()=>{
   const a=document.createElement('a')
   a.href=url;a.download=`mencho-backup-${todayStr()}.json`
   document.body.appendChild(a);a.click();a.remove();URL.revokeObjectURL(url)
+  localStorage.setItem(BACKUP_KEY,new Date().toISOString())  // 最終バックアップ日時を記録
+  hideBackupBanner()                                          // 済んだのでリマインダーは引っ込める
   toast('バックアップを書き出したよ')
 }
+$('exportBtn').onclick=doExport
 $('importBtn').onclick=()=>$('importInput').click()
 $('importInput').onchange=e=>{
   const file=e.target.files[0];if(!file)return
@@ -1366,7 +1444,23 @@ $('importInput').onchange=e=>{
 }
 
 let tT=null
-function toast(m){const t=$('toast');t.textContent=m;t.classList.add('on');clearTimeout(tT);tT=setTimeout(()=>t.classList.remove('on'),1800)}
+// Snackbar。第2引数に {label,onAction,onExpire,duration} を渡すと「元に戻す」等の操作ボタン付きになる（M3）。
+function toast(m,action){
+  const t=$('toast'),ms=$('toastMsg'),ab=$('toastAction')
+  ms.textContent=m
+  clearTimeout(tT)
+  if(action){
+    ab.textContent=action.label
+    ab.classList.remove('hidden')
+    ab.onclick=()=>{clearTimeout(tT);action.onAction()}
+    tT=setTimeout(()=>{t.classList.remove('on');if(action.onExpire)action.onExpire()},action.duration||6000)
+  }else{
+    ab.classList.add('hidden')
+    ab.onclick=null
+    tT=setTimeout(()=>t.classList.remove('on'),1800)
+  }
+  t.classList.add('on')
+}
 
 // シートを下スワイプで閉じられるように
 makeSwipeable($('sheet'),hideSheet)
@@ -1385,6 +1479,9 @@ migratePhotosV2()
 if(localStorage.getItem(TROPHY_KEY)===null && window.computeAchievements){
   localStorage.setItem(TROPHY_KEY, JSON.stringify(computeAchievements(records).filter(a=>a.earned).map(a=>a.id)))
 }
+// バックアップ・リマインダー: 初回は基準日時を now に（アプデ直後の即ナグを防ぐ）→ 条件を満たせばバナー表示
+if(localStorage.getItem(BACKUP_BASE_KEY)===null) localStorage.setItem(BACKUP_BASE_KEY,new Date().toISOString())
+maybeShowBackupBanner()
 
 // 保存時の可愛い演出
 function celebrate(){
